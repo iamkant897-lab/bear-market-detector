@@ -760,21 +760,15 @@ function drawRecBands(ctx,x,y,rec){
     ctx.strokeStyle='rgba(160,160,190,0.45)';
     ctx.lineWidth=1;ctx.setLineDash([]);
     ctx.strokeRect(x1,y.top,bw,y.bottom-y.top);
-    // 항상 가로 텍스트 — 너비에 따라 전체 → 중간 → 최소 순으로 선택
+    // 항상 가로 텍스트 — 전체 명칭 그대로, 밴드 중앙 기준으로 차트 영역 내에서 표시
     const yr=r.s.slice(0,4);
     ctx.font='bold 9px Courier New';
     ctx.fillStyle='rgba(190,190,220,0.85)';
-    const candidates=[REC_FULL[yr]||`${yr}침체`, REC_MID[yr]||yr, REC_MIN[yr]||yr.slice(2)];
-    let chosen=null;
-    for(const c of candidates){if(ctx.measureText(c).width+6<=bw){chosen=c;break;}}
-    if(chosen){
-      // 밴드 영역으로 클리핑해서 삐져나가지 않게
-      ctx.save();
-      ctx.beginPath();ctx.rect(x1,y.top,bw,y.bottom-y.top);ctx.clip();
-      const tw=ctx.measureText(chosen).width;
-      ctx.fillText(chosen,x1+(bw-tw)/2,y.bottom-8);
-      ctx.restore();
-    }
+    const label=REC_FULL[yr]||`${yr}침체`;
+    const tw=ctx.measureText(label).width;
+    const cx=x1+bw/2; // 밴드 중앙
+    const tx=Math.min(Math.max(cx-tw/2, x.left+2), x.right-tw-2); // 차트 영역 벗어나지 않게
+    ctx.fillText(label,tx,y.bottom-8);
     ctx.restore();
   }
 }
