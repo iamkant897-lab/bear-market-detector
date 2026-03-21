@@ -1082,6 +1082,41 @@ function drawAnnotations(ctx, x, y, items){
 }
 
 function makeTooltipCfg(){return{enabled:false};}
+function makeHoverPlugin(isSpx){
+  return{
+    id:isSpx?'hoverSpx':'hoverSprd',
+    afterEvent(chart,args){
+      const ev=args.event;
+      if(ev.type==='mousemove'||ev.type==='touchmove'){
+        chart._hx=ev.x;
+        const other=isSpx?spreadChart:spxChart;
+        if(other?.scales?.x){
+          other._hx=other.scales.x.getPixelForValue(chart.scales.x.getValueForPixel(ev.x));
+          other.update('none');
+        }
+      }else if(ev.type==='mouseout'||ev.type==='mouseleave'){
+        chart._hx=null;
+        const other=isSpx?spreadChart:spxChart;
+        if(other){other._hx=null;other.update('none');}
+      }
+      args.changed=true;
+    },
+    afterDraw(chart){
+      const x=chart._hx;if(x==null)return;
+      const ca=chart.chartArea,ctx=chart.ctx;
+      if(x<ca.left||x>ca.right)return;
+      const ts=chart.scales.x.getValueForPixel(x);
+      ctx.save();
+      ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+      ctx.beginPath();ctx.moveTo(x,ca.top);ctx.lineTo(x,ca.bottom);ctx.stroke();
+      ctx.font='9px Courier New';ctx.fillStyle='rgba(230,237,243,0.6)';ctx.textAlign='center';
+      const lx=Math.min(Math.max(x,ca.left+22),ca.right-22);
+      ctx.fillText(new Date(ts).toISOString().slice(0,7),lx,ca.bottom+12);
+      ctx.restore();
+      drawInfoBox(ctx,ca,ts,isSpx);
+    }
+  };
+}
 
 // ③ 공유 annoItems 빌더 — SPX/스프레드 차트 양쪽 공용
 function buildAnnoItems(invPeriods,deInvPeriods,confirmDates,troughEntries,partialAnalyzed,partialTroughEntries,partialResult,mode){
@@ -1169,7 +1204,7 @@ function renderSpxChart(daily,spArr,analyzed,events,phase,invStart,deInvStart,re
         // priority 1=항상표시 / 2=공간있으면 / 3=여유있을때만
         drawAnnotations(ctx,x,y,buildAnnoItems(invPeriods,deInvPeriods,confirmDates,troughEntries,_partialAnalyzed,partialTroughEntries,_partialResult,'spx'));
       }
-    }]
+    },makeHoverPlugin(true)]
   });
 }
 
@@ -1254,7 +1289,7 @@ function renderSpreadChart(daily,events,phase,invStart,deInvStart,recPeriods,fed
         if(todayX!==null){ctx.save();ctx.strokeStyle='rgba(88,166,255,0.4)';ctx.lineWidth=1;ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(todayX,y.top);ctx.lineTo(todayX,y.bottom);ctx.stroke();ctx.restore();}
         drawAnnotations(ctx,x,y,buildAnnoItems(invPeriods,deInvPeriods,confirmDates,[],[],_partialAnalyzed,partialResult,'spread'));
       }
-    }]
+    },makeHoverPlugin(false)]
   });
 }
 
@@ -1346,50 +1381,12 @@ function syncChartAreas(){
   });
 }
 
-// ── 크로스헤어 동기화 ───────────────────────────────────────────
+// ── 크로스헤어: Chart.js 플러그인(makeHoverPlugin)으로 통합됨 ──
 function setupCrosshairs(){
-  // 기존 오버레이 캔버스 재사용 (크기 동일하면 DOM 재생성 없이 resize만)
-  ['spx','spread'].forEach(id=>{
-    const canvas=document.getElementById(`${id}-chart`);if(!canvas)return;
-    let ov=document.getElementById(`${id}-ov`);
-    if(!ov){
-      ov=document.createElement('canvas');
-      ov.id=`${id}-ov`;ov.style.cssText='position:absolute;top:0;left:0;pointer-events:none;z-index:5';
-      canvas.parentElement.appendChild(ov);
-    }
-    ov.width=canvas.offsetWidth;ov.height=canvas.offsetHeight;
-    ov.style.width=canvas.offsetWidth+'px';ov.style.height=canvas.offsetHeight+'px';
-    if(id==='spx')spxOverlay=ov;else spreadOverlay=ov;
-  });
-  ['spx-chart','spread-chart'].forEach((cid,idx)=>{
-    const canvas=document.getElementById(cid);if(!canvas)return;
-    const isSpx=idx===0;
-    if(canvas._chMove)canvas.removeEventListener('mousemove',canvas._chMove);
-    if(canvas._chLeave)canvas.removeEventListener('mouseleave',canvas._chLeave);
-    if(canvas._chTMove)canvas.removeEventListener('touchmove',canvas._chTMove);
-    if(canvas._chTEnd)canvas.removeEventListener('touchend',canvas._chTEnd);
-    const doMove=(clientX)=>{
-      const chart=isSpx?spxChart:spreadChart,other=isSpx?spreadChart:spxChart;
-      const ov=isSpx?spxOverlay:spreadOverlay,otherOv=isSpx?spreadOverlay:spxOverlay;
-      if(!chart||!other)return;
-      const rect=canvas.getBoundingClientRect(),mx=clientX-rect.left;
-      const ca=chart.chartArea;
-      if(mx<ca.left||mx>ca.right){clearOv(ov);clearOv(otherOv);return;}
-      const val=chart.scales.x.getValueForPixel(mx);
-      const otherX=other.scales.x.getPixelForValue(val);
-      drawCh(ov,chart,mx,isSpx);drawCh(otherOv,other,otherX,!isSpx);
-    };
-    canvas._chMove=e=>doMove(e.clientX);
-    canvas._chLeave=()=>{clearOv(spxOverlay);clearOv(spreadOverlay);};
-    canvas._chTMove=e=>{if(e.touches?.length)doMove(e.touches[0].clientX);};
-    canvas._chTEnd=()=>{clearOv(spxOverlay);clearOv(spreadOverlay);};
-    canvas.addEventListener('mousemove',canvas._chMove);
-    canvas.addEventListener('mouseleave',canvas._chLeave);
-    canvas.addEventListener('touchmove',canvas._chTMove,{passive:true});
-    canvas.addEventListener('touchend',canvas._chTEnd);
-  });
+  // 이전 오버레이 캔버스 정리
+  ['spx-ov','spread-ov'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove();});
+  spxOverlay=null;spreadOverlay=null;
 }
-function clearOv(ov){if(ov)ov.getContext('2d').clearRect(0,0,ov.width,ov.height);}
 function drawInfoBox(ctx,ca,ts,isSpx){
   const lines=[{text:new Date(ts).toISOString().slice(0,10),color:'rgba(200,207,216,0.65)'}];
   if(isSpx&&cache?.sp?.length){
@@ -1412,21 +1409,6 @@ function drawInfoBox(ctx,ca,ts,isSpx){
   ctx.fillStyle='rgba(13,17,23,0.82)';
   ctx.fillRect(ca.left+4,ca.top+4,bw,bh);
   lines.forEach((l,i)=>{ctx.fillStyle=l.color;ctx.textAlign='left';ctx.fillText(l.text,ca.left+4+pad,ca.top+4+pad+(i+0.78)*lh);});
-  ctx.restore();
-}
-function drawCh(ov,chart,x,isSpx){
-  if(!ov||!chart)return;
-  const ctx=ov.getContext('2d'),ca=chart.chartArea;
-  ctx.clearRect(0,0,ov.width,ov.height);
-  if(x<ca.left||x>ca.right)return;
-  ctx.save();
-  ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
-  ctx.beginPath();ctx.moveTo(x,ca.top);ctx.lineTo(x,ca.bottom);ctx.stroke();
-  const ts=chart.scales.x.getValueForPixel(x);
-  const lx=Math.min(Math.max(x,ca.left+22),ca.right-22);
-  ctx.font='9px Courier New';ctx.fillStyle='rgba(230,237,243,0.6)';ctx.textAlign='center';
-  ctx.fillText(new Date(ts).toISOString().slice(0,7),lx,ca.bottom+12);
-  drawInfoBox(ctx,ca,ts,isSpx);
   ctx.restore();
 }
 
