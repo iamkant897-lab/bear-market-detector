@@ -1320,7 +1320,7 @@ function renderSpreadChart(daily,events,phase,invStart,deInvStart,recPeriods,fed
         x:{type:'time',time:{unit:'year',tooltipFormat:'yyyy-MM-dd'},min:new Date(cutStr).getTime(),grid:{color:'#21262d'},ticks:{color:'#484f58',font:{family:'Courier New',size:10},maxRotation:0}},
         y:{grid:{color:'#21262d'},ticks:{color:'#484f58',font:{family:'Courier New',size:10},callback:v=>`${v>=0?'+':''}${v.toFixed(1)}%`}},
         y1:{type:'linear',position:'right',grid:{drawOnChartArea:false},afterFit:s=>{s.width=0;},
-          ticks:{mirror:true,padding:4,color:'rgba(188,140,255,0.7)',font:{family:'Courier New',size:9},callback:v=>Number.isInteger(v)?`${v}%`:''}}
+          ticks:{display:false}}
       }
     },
     plugins:[{id:'spreadDeco',
@@ -1361,12 +1361,27 @@ function renderSpreadChart(daily,events,phase,invStart,deInvStart,recPeriods,fed
           ctx.save();ctx.fillStyle='rgba(210,153,34,0.12)';ctx.fillRect(x1,y.top,x2-x1,y.bottom-y.top);ctx.restore();
         }
       },
-      afterDraw({ctx,scales:{x,y}}){
+      afterDraw({ctx,scales:{x,y,y1}}){
         const xOf=d=>{const p=x.getPixelForValue(new Date(d).getTime());return(p>=x.left&&p<=x.right)?p:null;};
         const todayStr=new Date().toISOString().slice(0,10);
         const todayX=xOf(todayStr);
         if(todayX!==null){ctx.save();ctx.strokeStyle='rgba(88,166,255,0.4)';ctx.lineWidth=1;ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(todayX,y.top);ctx.lineTo(todayX,y.bottom);ctx.stroke();ctx.restore();}
         drawAnnotations(ctx,x,y,buildAnnoItems(invPeriods,deInvPeriods,confirmDates,[],[],_partialAnalyzed,partialResult,'spread'));
+        // FF금리 라벨 — 항상 차트 안쪽 오른쪽에 고정 (클리핑 보장)
+        if(y1){
+          ctx.save();
+          ctx.beginPath();ctx.rect(x.left,y.top,x.right-x.left,y.bottom-y.top);ctx.clip();
+          ctx.font='9px Courier New';ctx.fillStyle='rgba(188,140,255,0.75)';ctx.textAlign='right';
+          const seen=new Set();
+          for(const tick of y1.ticks){
+            if(!Number.isInteger(tick.value)||tick.value<0)continue;
+            const key=tick.value;if(seen.has(key))continue;seen.add(key);
+            const ty=y1.getPixelForValue(tick.value);
+            if(ty<y.top+6||ty>y.bottom-4)continue;
+            ctx.fillText(`${tick.value}%`,x.right-4,ty+3);
+          }
+          ctx.restore();
+        }
       }
     },makeHoverPlugin(false)]
   });
@@ -1486,6 +1501,8 @@ function drawInfoBox(ctx,ca,ts,isSpx){
       lines.push({text:`2Y-3M   ${f(best.s2)}`,color:'#3fb950'});
       lines.push({text:`10Y-3M  ${f(best.s3)}`,color:'#ffa657'});
     }
+    const ff=nearestByTs(_fedfunds,ts);
+    if(ff)lines.push({text:`FF금리  ${ff.value.toFixed(2)}%`,color:'rgba(188,140,255,0.9)'});
   }
   ctx.save();
   ctx.font='9px Courier New';
