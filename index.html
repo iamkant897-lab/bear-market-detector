@@ -1249,7 +1249,7 @@ function renderSpxChart(daily,spArr,analyzed,events,phase,invStart,deInvStart,re
 
   spxChart=new Chart(ctx,{
     type:'line',
-    data:{labels:sp.map(o=>o.date),datasets:[{label:'S&P 500',data:sp.map(o=>o.value),borderColor:'#e6edf3',borderWidth:1.5,pointRadius:0,tension:0.1,backgroundColor:'transparent'}]},
+    data:{labels:monthlyClose(sp).map(o=>o.date),datasets:[{label:'S&P 500',data:monthlyClose(sp).map(o=>o.value),borderColor:'#e6edf3',borderWidth:1.5,pointRadius:0,tension:0.1,backgroundColor:'transparent'}]},
     options:{
       responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
@@ -1491,10 +1491,10 @@ function nearestByTs(arr,ts){
 function drawInfoBox(ctx,ca,ts,isSpx){
   const lines=[{text:new Date(ts).toISOString().slice(0,10),color:'rgba(200,207,216,0.65)'}];
   if(isSpx&&cache?.sp?.length){
-    const best=nearestByTs(cache.sp,ts);
+    const best=nearestByTs(monthlyClose(cache.sp),ts);
     if(best)lines.push({text:`SPX  ${Math.round(best.value).toLocaleString()}`,color:'#e6edf3'});
   }else if(!isSpx&&_daily?.length){
-    const best=nearestByTs(_daily,ts);
+    const best=nearestByTs(monthlyClose(_daily),ts);
     if(best){
       const f=v=>`${v>=0?'+':''}${v.toFixed(2)}%`;
       lines.push({text:`10Y-2Y  ${f(best.s1)}`,color:'#8b949e'});
