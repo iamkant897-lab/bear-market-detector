@@ -545,6 +545,7 @@ S&P 500이 고점 대비 -15% 이하로
             <div class="li"><div class="ll" style="background:#58a6ff"></div><span title="깊이 지표 — s2·s3와 함께 역전 시 침체 심화">10Y−2Y (깊이)</span></div>
             <div class="li"><div class="ll" style="background:#3fb950"></div><span title="주 신호 — 역전/해소 판단 기준">2Y−3M ★</span></div>
             <div class="li"><div class="ll" style="background:#ffa657"></div><span title="주 신호 — 역전/해소 판단 기준">10Y−3M ★</span></div>
+            <div class="li"><div class="ll" style="background:rgba(188,140,255,0.7)"></div>FF금리</div>
             <div class="li"><div style="width:14px;height:8px;background:rgba(248,81,73,.2);border:1px solid #f85149;border-radius:2px"></div>3종 동시역전 (s1 합류)</div>
             <div class="li"><div style="width:14px;height:8px;background:rgba(88,166,255,.1);border:1px solid #58a6ff;border-radius:2px"></div>s2·s3 단독역전 (s1 미참여)</div>
             <div class="li"><div style="width:14px;height:8px;background:rgba(210,153,34,.2);border:1px solid #d29922;border-radius:2px"></div>해소 진행중</div>
@@ -1533,7 +1534,8 @@ function renderSpreadChart(daily,events,phase,invStart,deInvStart,recPeriods,fed
     data:{datasets:[
       {label:'10Y−2Y',data:data.map(d=>({x:d.date,y:d.s1})),borderColor:'#58a6ff',borderWidth:1.5,pointRadius:0,tension:0.1,backgroundColor:'transparent',yAxisID:'y'},
       {label:'2Y−3M', data:data.map(d=>({x:d.date,y:d.s2})),borderColor:'#3fb950',borderWidth:1.5,pointRadius:0,tension:0.1,backgroundColor:'transparent',yAxisID:'y'},
-      {label:'10Y−3M',data:data.map(d=>({x:d.date,y:d.s3})),borderColor:'#ffa657',borderWidth:1.5,pointRadius:0,tension:0.1,backgroundColor:'transparent',yAxisID:'y'}
+      {label:'10Y−3M',data:data.map(d=>({x:d.date,y:d.s3})),borderColor:'#ffa657',borderWidth:1.5,pointRadius:0,tension:0.1,backgroundColor:'transparent',yAxisID:'y'},
+      {label:'FF금리',data:ffData.map(d=>({x:d.date,y:d.value})),borderColor:'rgba(188,140,255,0.65)',borderWidth:1,borderDash:[5,4],pointRadius:0,tension:0.1,backgroundColor:'transparent',yAxisID:'y1'}
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
@@ -1541,7 +1543,8 @@ function renderSpreadChart(daily,events,phase,invStart,deInvStart,recPeriods,fed
       plugins:{legend:{display:false},tooltip:makeTooltipCfg(false),zoom:makeZoomOpts(false)},
       scales:{
         x:{type:'time',time:{unit:'year',tooltipFormat:'yyyy-MM-dd'},min:new Date(cutStr).getTime(),grid:{color:'#21262d'},ticks:{color:'#484f58',font:{family:'Courier New',size:10},maxRotation:0}},
-        y:{grid:{color:'#21262d'},ticks:{color:'#484f58',font:{family:'Courier New',size:10},callback:v=>`${v>=0?'+':''}${v.toFixed(1)}%`}}
+        y:{grid:{color:'#21262d'},ticks:{color:'#484f58',font:{family:'Courier New',size:10},callback:v=>`${v>=0?'+':''}${v.toFixed(1)}%`}},
+        y1:{type:'linear',position:'right',grid:{drawOnChartArea:false},afterFit:s=>{s.width=0;},ticks:{display:false}}
       }
     },
     plugins:[{id:'spreadDeco',
