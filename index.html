@@ -156,6 +156,7 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:13p
   <div>
     <div class="hdr-title">▶ 하락장 감별기 <small>/ BEAR MARKET DETECTOR v3.2</small></div>
     <div class="hdr-sub">동시역전 감지 · 동시해소 타이밍 · SPX 하락까지 평균 시차 분석 · FRED API</div>
+    <div class="hdr-sub" style="color:rgba(248,81,73,0.6);margin-top:1px">⚠ 본 대시보드는 교육·연구 목적으로 제공되며 투자 권유가 아닙니다. 모든 투자 결정의 책임은 본인에게 있습니다.</div>
   </div>
   <div class="hdr-r">
     <span id="month-dday" style="color:var(--blue);font-size:11px;font-weight:bold;letter-spacing:1px"></span>
@@ -1530,5 +1531,10 @@ function setRange(y,btn){
   [spxChart,spreadChart].forEach(c=>{if(!c)return;c.options.scales.x.min=minTs;c.options.scales.x.max=maxTs;c.update('none');});
 }
 </script>
+<footer style="text-align:center;padding:24px 16px;color:rgba(139,148,158,0.5);font-size:10px;font-family:var(--font);border-top:1px solid var(--bd);margin-top:32px;line-height:1.8">
+  본 대시보드는 교육·연구 목적으로 제공되며 투자 권유 또는 금융 조언이 아닙니다.<br>
+  과거 데이터에 기반한 분석이며 미래 수익을 보장하지 않습니다. 모든 투자 결정의 책임은 본인에게 있습니다.<br>
+  <span style="color:rgba(139,148,158,0.3)">Data: FRED (Federal Reserve Bank of St. Louis) · S&P 500</span>
+</footer>
 </body>
 </html>
