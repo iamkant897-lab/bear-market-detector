@@ -1185,12 +1185,14 @@ function makeHoverPlugin(isSpx){
       const ca=chart.chartArea,ctx=chart.ctx;
       if(x<ca.left||x>ca.right)return;
       const ts=chart.scales.x.getValueForPixel(x);
+      const snapArr=isSpx?monthlyClose(cache?.sp||[]):monthlyClose(_daily||[]);
+      const snap=nearestByTs(snapArr,ts);
       ctx.save();
       ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
       ctx.beginPath();ctx.moveTo(x,ca.top);ctx.lineTo(x,ca.bottom);ctx.stroke();
       ctx.font='9px Courier New';ctx.fillStyle='rgba(230,237,243,0.6)';ctx.textAlign='center';
       const lx=Math.min(Math.max(x,ca.left+22),ca.right-22);
-      ctx.fillText(new Date(ts).toISOString().slice(0,7),lx,ca.bottom+12);
+      ctx.fillText(snap?snap.date.slice(0,7):new Date(ts).toISOString().slice(0,7),lx,ca.bottom+12);
       ctx.restore();
       drawInfoBox(ctx,ca,ts,isSpx);
     }
@@ -1489,21 +1491,26 @@ function nearestByTs(arr,ts){
   return arr[lo];
 }
 function drawInfoBox(ctx,ca,ts,isSpx){
-  const lines=[{text:new Date(ts).toISOString().slice(0,10),color:'rgba(200,207,216,0.65)'}];
+  const lines=[];
   if(isSpx&&cache?.sp?.length){
     const best=nearestByTs(monthlyClose(cache.sp),ts);
-    if(best)lines.push({text:`SPX  ${Math.round(best.value).toLocaleString()}`,color:'#e6edf3'});
+    if(best){
+      lines.push({text:best.date.slice(0,7),color:'rgba(200,207,216,0.65)'});
+      lines.push({text:`SPX  ${Math.round(best.value).toLocaleString()}`,color:'#e6edf3'});
+    }
   }else if(!isSpx&&_daily?.length){
     const best=nearestByTs(monthlyClose(_daily),ts);
     if(best){
+      lines.push({text:best.date.slice(0,7),color:'rgba(200,207,216,0.65)'});
       const f=v=>`${v>=0?'+':''}${v.toFixed(2)}%`;
       lines.push({text:`10Y-2Y  ${f(best.s1)}`,color:'#8b949e'});
       lines.push({text:`2Y-3M   ${f(best.s2)}`,color:'#3fb950'});
       lines.push({text:`10Y-3M  ${f(best.s3)}`,color:'#ffa657'});
+      const ff=nearestByTs(monthlyClose(_fedfunds),ts);
+      if(ff)lines.push({text:`FF금리  ${ff.value.toFixed(2)}%`,color:'rgba(188,140,255,0.9)'});
     }
-    const ff=nearestByTs(_fedfunds,ts);
-    if(ff)lines.push({text:`FF금리  ${ff.value.toFixed(2)}%`,color:'rgba(188,140,255,0.9)'});
   }
+  if(!lines.length)lines.push({text:new Date(ts).toISOString().slice(0,7),color:'rgba(200,207,216,0.65)'});
   ctx.save();
   ctx.font='9px Courier New';
   const lh=13,pad=5;
