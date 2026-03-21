@@ -1062,7 +1062,7 @@ function updateCards(latest,analyzed,fedfunds){
     const near=Math.abs(v)<0.3&&v>=0; // 양수지만 0 근접
     const approaching=v>0&&v<0.5;
     document.getElementById(`sc${i}`).className=`sc ${v<0?'c-red':near?'c-yellow':'c-green'}`;
-    const warn=approaching?` ⚠`:v<0?' ▼':'';
+    const warn=v<0?' ▼':'';
     document.getElementById(`sv${i}`).textContent=`${v>=0?'+':''}${v.toFixed(2)}%${warn}`;
     document.getElementById(`ss${i}`).textContent=`${lbl} · ${latest.date}`;
   });
