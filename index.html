@@ -211,6 +211,8 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
 .faq-a{color:var(--t2);font-size:13px;line-height:1.8;display:none}
 .faq-a.open{display:block}
 
+/* ── 비교적 역전 서브 배너 ── */
+#partial-banner{display:none;background:rgba(88,166,255,.05);border:1px solid rgba(88,166,255,.2);border-radius:var(--r);padding:10px 20px;font-size:12px;margin-bottom:12px;justify-content:space-between;align-items:center}
 /* ── 유사 사례 카드 ── */
 .similar-card{background:var(--bg1);border:1px solid rgba(255,166,87,.2);border-radius:var(--r);padding:14px 20px;margin-bottom:12px;display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;box-shadow:var(--sh-sm)}
 .similar-card-title{color:var(--orange);font-size:11px;letter-spacing:.6px;margin-bottom:6px;text-transform:uppercase;font-weight:600}
@@ -243,7 +245,6 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
   #phase-card>:nth-child(2){grid-column:1/-1;grid-template-columns:repeat(2,1fr)}
   #phase-progress{gap:3px}
   .pp-arrow{padding:0 2px;font-size:9px}
-  .stats-row,.stats-row2{grid-template-columns:repeat(2,1fr)}
   .sc-val{font-size:18px}
   .sc2-val{font-size:15px}
   .hdr-r .btn{display:none}
@@ -310,12 +311,12 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
     <div class="intro-panel">
       <button class="intro-toggle" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.intro-arr').textContent=this.nextElementSibling.classList.contains('open')?'▲':'▼'">
         ◈ 이 대시보드 사용법 &amp; 해석 가이드
-        <span class="intro-arr" style="color:var(--t3)">▼</span>
+        <span class="intro-arr" style="color:var(--blue)">▲</span>
       </button>
-      <div class="intro-body">
+      <div class="intro-body open">
         <b>무엇을 보여주나요?</b> 미국 국채 금리차(스프레드) 역전 현상을 추적해 <b>경기침체·조정장 신호</b>가 발생했는지 판단합니다.
         금리차가 역전되고 다시 정상화될 때 역사적으로 S&P 500이 크게 하락하는 패턴을 분석합니다.
-        <div style="margin-top:8px;padding:7px 12px;background:rgba(210,153,34,0.08);border-left:2px solid var(--yellow);font-size:10px;color:var(--t2)">
+        <div style="margin-top:8px;padding:7px 12px;background:rgba(210,153,34,0.08);border-left:2px solid var(--yellow);color:var(--t2)">
           ⚠ <b style="color:var(--yellow)">판단 기준: 월봉 종가 전용</b> — 역전·해소·신호 확정 여부는 오직 <b>월봉(월말) 종가</b>만으로 판단합니다.
           일봉·주봉은 단기 노이즈가 포함되어 있어 판단 기준에서 제외합니다.
           일봉·주봉 기준으로 역전이 발생하거나 해소되더라도 <b>월봉 종가 기준으로 조건이 충족되지 않으면 신호로 인정하지 않습니다.</b>
@@ -366,27 +367,27 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
       </button>
       <div class="faq-body">
         <div class="faq-item">
-          <div class="faq-q" onclick="this.nextElementSibling.classList.toggle('open')">Q. 금리 역전이 뭔가요? <span style="color:var(--t3);font-size:10px">▼</span></div>
+          <div class="faq-q" onclick="this.nextElementSibling.classList.toggle('open')">Q. 금리 역전이 뭔가요? <span style="color:var(--t3)">▼</span></div>
           <div class="faq-a">보통 장기 금리(10년물)가 단기 금리(2년·3개월물)보다 높습니다. 그런데 경기 불안이 커지면 단기금리가 장기금리를 앞질러 버리는 현상이 생기는데, 이걸 <b style="color:var(--t1)">역전(Inversion)</b>이라고 합니다. 1980년 이후 역전이 해소될 때마다 경기침체와 주가 급락이 뒤따랐습니다.</div>
         </div>
         <div class="faq-item">
-          <div class="faq-q" onclick="this.nextElementSibling.classList.toggle('open')">Q. 지금 역전 중이면 당장 주식을 팔아야 하나요? <span style="color:var(--t3);font-size:10px">▼</span></div>
+          <div class="faq-q" onclick="this.nextElementSibling.classList.toggle('open')">Q. 지금 역전 중이면 당장 주식을 팔아야 하나요? <span style="color:var(--t3)">▼</span></div>
           <div class="faq-a">아닙니다. 이 대시보드의 신호는 <b style="color:var(--t1)">역전이 해소된 후 2개월</b>이 지나야 확정됩니다. 역전 중에는 오히려 주가가 상승하는 경우도 많습니다. 역전 → 해소 → 확정 순서로 진행되고, 확정 이후에도 평균 수개월의 시차가 있습니다. 신호가 발령되면 확인 후 대응해도 늦지 않습니다.</div>
         </div>
         <div class="faq-item">
-          <div class="faq-q" onclick="this.nextElementSibling.classList.toggle('open')">Q. 신호가 100% 맞는 건가요? <span style="color:var(--t3);font-size:10px">▼</span></div>
+          <div class="faq-q" onclick="this.nextElementSibling.classList.toggle('open')">Q. 신호가 100% 맞는 건가요? <span style="color:var(--t3)">▼</span></div>
           <div class="faq-a">아닙니다. 정확한 성공률은 위 통계 카드의 <b style="color:var(--t1)">"침체 예측 성공률"</b>에서 확인할 수 있습니다. 3종 역전은 역사적으로 높은 적중률을 보여왔지만, <b style="color:var(--t1)">30개월 내 -20%가 오지 않은 사례</b>도 포함되어 있습니다. 과거 패턴이 반드시 반복된다는 보장은 없으며, 이 지표는 참고 도구일 뿐 투자 결정은 본인의 판단과 책임 하에 이루어져야 합니다.</div>
         </div>
         <div class="faq-item">
-          <div class="faq-q" onclick="this.nextElementSibling.classList.toggle('open')">Q. s1, s2, s3이 뭔가요? <span style="color:var(--t3);font-size:10px">▼</span></div>
+          <div class="faq-q" onclick="this.nextElementSibling.classList.toggle('open')">Q. s1, s2, s3이 뭔가요? <span style="color:var(--t3)">▼</span></div>
           <div class="faq-a"><b style="color:var(--t1)">s1 = 10년물 − 2년물</b>: 장단기 금리차의 대표 지표. 깊이 지표로 사용.<br><b style="color:var(--t1)">s2 = 2년물 − 3개월물</b>: 연준의 정책 민감도를 반영하는 핵심 지표.<br><b style="color:var(--t1)">s3 = 10년물 − 3개월물</b>: 경기 선행성이 가장 강한 지표. 세 가지가 모두 음수일 때 3종 역전이라 합니다.</div>
         </div>
         <div class="faq-item">
-          <div class="faq-q" onclick="this.nextElementSibling.classList.toggle('open')">Q. 왜 일봉·주봉이 아닌 월봉만 보나요? <span style="color:var(--t3);font-size:10px">▼</span></div>
+          <div class="faq-q" onclick="this.nextElementSibling.classList.toggle('open')">Q. 왜 일봉·주봉이 아닌 월봉만 보나요? <span style="color:var(--t3)">▼</span></div>
           <div class="faq-a">일봉·주봉은 하루하루 변동이 심해 <b style="color:var(--t1)">오신호(노이즈)</b>가 자주 발생합니다. 월봉 종가는 한 달의 평균적인 분위기를 반영해 훨씬 안정적입니다. "역전됐다 싶었는데 다음 날 해소"되는 혼란을 막기 위해 월봉 기준을 채택했습니다.</div>
         </div>
         <div class="faq-item">
-          <div class="faq-q" onclick="this.nextElementSibling.classList.toggle('open')">Q. 이 데이터는 언제 업데이트되나요? <span style="color:var(--t3);font-size:10px">▼</span></div>
+          <div class="faq-q" onclick="this.nextElementSibling.classList.toggle('open')">Q. 이 데이터는 언제 업데이트되나요? <span style="color:var(--t3)">▼</span></div>
           <div class="faq-a">FRED(미국 연방준비제도)가 영업일 기준 매일 수치를 발표합니다. 대시보드는 접속할 때마다 최신 데이터를 불러옵니다. 하지만 역전/해소 판단은 <b style="color:var(--t1)">월말 종가 확정 후</b>에만 바뀝니다. 월말 며칠 전부터 수치가 변동되더라도 그달 마지막 영업일 종가가 확정돼야 공식 판단에 반영됩니다.</div>
         </div>
       </div>
@@ -402,7 +403,7 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
       </div>
     </div>
     <!-- 비교적 역전 서브 배너 -->
-    <div id="partial-banner" style="display:none;background:rgba(88,166,255,0.07);border:1px solid rgba(88,166,255,0.3);border-top:none;padding:7px 18px;font-size:11px;display:flex;justify-content:space-between;align-items:center">
+    <div id="partial-banner">
       <span>🔵 <span id="pb-text">—</span></span>
       <span id="pb-time" style="color:var(--t2);font-size:10px">—</span>
     </div>
@@ -544,7 +545,6 @@ S&P 500이 고점 대비 -15% 이하로
             <div class="li"><div class="ll" style="background:#58a6ff"></div><span title="깊이 지표 — s2·s3와 함께 역전 시 침체 심화">10Y−2Y (깊이)</span></div>
             <div class="li"><div class="ll" style="background:#3fb950"></div><span title="주 신호 — 역전/해소 판단 기준">2Y−3M ★</span></div>
             <div class="li"><div class="ll" style="background:#ffa657"></div><span title="주 신호 — 역전/해소 판단 기준">10Y−3M ★</span></div>
-            <div class="li"><div class="ll" style="background:rgba(188,140,255,0.7)"></div>FF금리(우)</div>
             <div class="li"><div style="width:14px;height:8px;background:rgba(248,81,73,.2);border:1px solid #f85149;border-radius:2px"></div>3종 동시역전 (s1 합류)</div>
             <div class="li"><div style="width:14px;height:8px;background:rgba(88,166,255,.1);border:1px solid #58a6ff;border-radius:2px"></div>s2·s3 단독역전 (s1 미참여)</div>
             <div class="li"><div style="width:14px;height:8px;background:rgba(210,153,34,.2);border:1px solid #d29922;border-radius:2px"></div>해소 진행중</div>
@@ -1140,6 +1140,7 @@ async function initVisitorCount(){
       if(day!=null)parts.push('오늘 '+day.toLocaleString()+'명');
       if(tot!=null)parts.push('누적 '+tot.toLocaleString()+'명');
       el.textContent=parts.join(' · ');
+      el.style.display='inline';
     }
   }catch(_){}
 }
@@ -1532,8 +1533,7 @@ function renderSpreadChart(daily,events,phase,invStart,deInvStart,recPeriods,fed
     data:{datasets:[
       {label:'10Y−2Y',data:data.map(d=>({x:d.date,y:d.s1})),borderColor:'#58a6ff',borderWidth:1.5,pointRadius:0,tension:0.1,backgroundColor:'transparent',yAxisID:'y'},
       {label:'2Y−3M', data:data.map(d=>({x:d.date,y:d.s2})),borderColor:'#3fb950',borderWidth:1.5,pointRadius:0,tension:0.1,backgroundColor:'transparent',yAxisID:'y'},
-      {label:'10Y−3M',data:data.map(d=>({x:d.date,y:d.s3})),borderColor:'#ffa657',borderWidth:1.5,pointRadius:0,tension:0.1,backgroundColor:'transparent',yAxisID:'y'},
-      {label:'FF금리',data:ffData.map(d=>({x:d.date,y:d.value})),borderColor:'rgba(188,140,255,0.65)',borderWidth:1,borderDash:[5,4],pointRadius:0,tension:0.1,backgroundColor:'transparent',yAxisID:'y1'}
+      {label:'10Y−3M',data:data.map(d=>({x:d.date,y:d.s3})),borderColor:'#ffa657',borderWidth:1.5,pointRadius:0,tension:0.1,backgroundColor:'transparent',yAxisID:'y'}
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
@@ -1541,9 +1541,7 @@ function renderSpreadChart(daily,events,phase,invStart,deInvStart,recPeriods,fed
       plugins:{legend:{display:false},tooltip:makeTooltipCfg(false),zoom:makeZoomOpts(false)},
       scales:{
         x:{type:'time',time:{unit:'year',tooltipFormat:'yyyy-MM-dd'},min:new Date(cutStr).getTime(),grid:{color:'#21262d'},ticks:{color:'#484f58',font:{family:'Courier New',size:10},maxRotation:0}},
-        y:{grid:{color:'#21262d'},ticks:{color:'#484f58',font:{family:'Courier New',size:10},callback:v=>`${v>=0?'+':''}${v.toFixed(1)}%`}},
-        y1:{type:'linear',position:'right',grid:{drawOnChartArea:false},afterFit:s=>{s.width=0;},
-          ticks:{display:false}}
+        y:{grid:{color:'#21262d'},ticks:{color:'#484f58',font:{family:'Courier New',size:10},callback:v=>`${v>=0?'+':''}${v.toFixed(1)}%`}}
       }
     },
     plugins:[{id:'spreadDeco',
@@ -1584,27 +1582,12 @@ function renderSpreadChart(daily,events,phase,invStart,deInvStart,recPeriods,fed
           ctx.save();ctx.fillStyle='rgba(210,153,34,0.12)';ctx.fillRect(x1,y.top,x2-x1,y.bottom-y.top);ctx.restore();
         }
       },
-      afterDraw({ctx,scales:{x,y,y1}}){
+      afterDraw({ctx,scales:{x,y}}){
         const xOf=d=>{const p=x.getPixelForValue(new Date(d).getTime());return(p>=x.left&&p<=x.right)?p:null;};
         const todayStr=new Date().toISOString().slice(0,10);
         const todayX=xOf(todayStr);
         if(todayX!==null){ctx.save();ctx.strokeStyle='rgba(88,166,255,0.4)';ctx.lineWidth=1;ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(todayX,y.top);ctx.lineTo(todayX,y.bottom);ctx.stroke();ctx.fillStyle='rgba(88,166,255,0.6)';ctx.font='bold 9px Courier New';ctx.fillText('TODAY',todayX+3,y.top+10);ctx.restore();}
         drawAnnotations(ctx,x,y,buildAnnoItems(invPeriods,deInvPeriods,confirmDates,[],[],_partialAnalyzed,partialResult,'spread'));
-        // FF금리 라벨 — 항상 차트 안쪽 오른쪽에 고정 (클리핑 보장)
-        if(y1){
-          ctx.save();
-          ctx.beginPath();ctx.rect(x.left,y.top,x.right-x.left,y.bottom-y.top);ctx.clip();
-          ctx.font='9px Courier New';ctx.fillStyle='rgba(188,140,255,0.75)';ctx.textAlign='right';
-          const seen=new Set();
-          for(const tick of y1.ticks){
-            if(!Number.isInteger(tick.value)||tick.value<0)continue;
-            const key=tick.value;if(seen.has(key))continue;seen.add(key);
-            const ty=y1.getPixelForValue(tick.value);
-            if(ty<y.top+6||ty>y.bottom-4)continue;
-            ctx.fillText(`${tick.value}%`,x.right-4,ty+3);
-          }
-          ctx.restore();
-        }
       }
     },makeHoverPlugin(false)]
   });
@@ -1917,7 +1900,7 @@ function setRange(y,btn){
   본 대시보드는 교육·연구 목적으로 제공되며 투자 권유 또는 금융 조언이 아닙니다.<br>
   과거 데이터에 기반한 분석이며 미래 수익을 보장하지 않습니다. 모든 투자 결정의 책임은 본인에게 있습니다.<br>
   <span style="color:rgba(139,148,158,0.3)">Data: FRED (Federal Reserve Bank of St. Louis) · S&P 500</span><br>
-  <span id="vc-footer" style="color:rgba(139,148,158,0.35)">—</span>
+  <span id="vc-footer" style="color:rgba(139,148,158,0.35);display:none"></span>
 </footer>
 </body>
 </html>
