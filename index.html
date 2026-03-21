@@ -1104,7 +1104,7 @@ function updateCards(latest,analyzed,fedfunds){
     if(bar){const pct=Math.min(Math.abs(v)/4*50,50);if(v<0){bar.style.cssText=`right:50%;width:${pct}%;background:var(--red)`;}else{bar.style.cssText=`left:50%;width:${pct}%;background:${near?'var(--yellow)':'var(--green)'}`;}};
     // 상태 뱃지
     const badge=document.getElementById(`sbadge${i}`);
-    if(badge){badge.textContent=v<0?'역전중':near?'주의':'정상';badge.className=`sc-badge ${v<0?'sc-badge-inv':near?'sc-badge-warn':'sc-badge-ok'}`;};
+    if(badge){badge.textContent=v<0?'역전중':'';badge.className=v<0?'sc-badge sc-badge-inv':'';};
   });
   // ② 단일 패스 — analyzed 배열을 한 번만 순회해서 모든 통계 계산
   const nowStr=new Date().toISOString().slice(0,10);
