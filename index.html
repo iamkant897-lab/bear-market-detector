@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>하락장 감별기 v3 | Bear Market Detector</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="하락장감별기">
+<link rel="apple-touch-icon" href="icon.svg">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
@@ -845,7 +852,7 @@ function render(data){
   const latest=_daily[_daily.length-1];
   updateCards(latest,_analyzed,_fedfunds);
   updateBanner(phase,deInvStart,invStart,_analyzed,negRun,posRun);
-  updatePhaseCard(phase,invStart,deInvStart,_analyzed);
+  updatePhaseCard(phase,invStart,deInvStart,_analyzed,negRun);
   updatePartialBanner();
   updateLiveReturn(phase,_analyzed);
   renderSpxChart(_daily,sp,_analyzed,events,phase,invStart,deInvStart,_recPeriods);
@@ -880,7 +887,7 @@ function updateBanner(phase,deInvStart,invStart,analyzed,negRun,posRun){
   else{banner.className='banner safe';dot.className='sdot green';document.getElementById('bstatus').textContent='🟢 정상 — 역전 없음';document.getElementById('bdesc').textContent='세 금리차 모두 양수. 정상 상태 유지 중.';document.getElementById('btime').textContent='—';}
 }
 
-function updatePhaseCard(phase,invStart,deInvStart,analyzed){
+function updatePhaseCard(phase,invStart,deInvStart,analyzed,negRun){
   const elMon=d=>d?Math.round((new Date()-new Date(d))/1000/60/60/24/30.4):null;
   const fmt=d=>d||'—';
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
@@ -888,7 +895,11 @@ function updatePhaseCard(phase,invStart,deInvStart,analyzed){
   const valid=analyzed.filter(a=>a.mToBear!==null);
   const avg=valid.length?Math.round(valid.reduce((s,a)=>s+a.mToBear,0)/valid.length):null;
   let phase_txt,sub,since,elapsed,next,color;
-  if(phase==='inv_active'){
+  if(phase==='inv_building'){
+    phase_txt='역전 예비 중';sub=`s1·s2·s3 동시 음수 ${negRun||'?'}개월 — 3개월 연속 시 유효 역전`;
+    since=fmt(invStart);elapsed=elMon(invStart);
+    next=`${3-(negRun||0)}개월 더 유지 시 3종역전 확정`;color='var(--yellow)';
+  }else if(phase==='inv_active'){
     phase_txt='3종역전 진행 중';sub='s1·s2·s3 동시 음수 — 아직 신호 아님';
     since=fmt(invStart);elapsed=elMon(invStart);
     next='해소 시작 후 2개월 → 신호 확정';color='var(--green)';
@@ -900,30 +911,27 @@ function updatePhaseCard(phase,invStart,deInvStart,analyzed){
     const el=elMon(last.confirmDate);
     phase_txt='신호 확정됨';sub=`${last.confirmDate} 확정 · 역사적 평균 ${avg||'?'}개월 뒤 SPX -20%`;
     since=fmt(last.confirmDate);elapsed=el;
-    next=avg&&el?`약 ${Math.max(0,avg-el)}개월 후 하락 집중 구간`:'역사적 패턴 모니터링 중';color='var(--red)';
+    next=avg&&el!=null?`약 ${Math.max(0,avg-el)}개월 후 하락 집중 구간`:'역사적 패턴 모니터링 중';color='var(--red)';
   }else{
     phase_txt='정상 — 역전 없음';sub='세 금리차 모두 양수';
     since='—';elapsed=null;next='s2·s3 동시 음수 전환 감지 시 알림';color='var(--green)';
   }
-  set('pc-phase',phase_txt);
-  set('pc-sub',sub);
-  set('pc-since',since);
-  set('pc-elapsed',elapsed!=null?`${elapsed}개월`:'—');
-  set('pc-next',next);
-  const el=document.getElementById('pc-phase');
-  if(el)el.style.color=color;
+  set('pc-phase',phase_txt);set('pc-sub',sub);set('pc-since',since);
+  set('pc-elapsed',elapsed!=null?`${elapsed}개월`:'—');set('pc-next',next);
+  const el=document.getElementById('pc-phase');if(el)el.style.color=color;
 }
 
 async function initVisitorCount(){
   const today=new Date().toISOString().slice(0,10).replace(/-/g,'');
   const ns='bmdet-iamkant897';
+  const hit=async key=>{
+    const r=await fetch(`https://api.counterapi.dev/v1/${ns}/${key}/up`,{signal:AbortSignal.timeout(6000)});
+    const j=await r.json();return j.count??null;
+  };
   try{
-    const [tot,day]=await Promise.all([
-      fetch(`https://api.countapi.xyz/hit/${ns}/total`).then(r=>r.json()),
-      fetch(`https://api.countapi.xyz/hit/${ns}/d${today}`).then(r=>r.json()),
-    ]);
-    if(tot?.value!=null)document.getElementById('vc-total').textContent=tot.value.toLocaleString()+'명';
-    if(day?.value!=null)document.getElementById('vc-daily').textContent=day.value.toLocaleString()+'명';
+    const [tot,day]=await Promise.all([hit('total'),hit('d'+today)]);
+    if(tot!=null)document.getElementById('vc-total').textContent=tot.toLocaleString()+'명';
+    if(day!=null)document.getElementById('vc-daily').textContent=day.toLocaleString()+'명';
   }catch(_){}
 }
 
@@ -1458,19 +1466,26 @@ function setupCrosshairs(){
   ['spx-ov','spread-ov'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove();});
   spxOverlay=null;spreadOverlay=null;
 }
+function nearestByTs(arr,ts){
+  if(!arr?.length)return null;
+  let lo=0,hi=arr.length-1;
+  while(lo<hi){const mid=(lo+hi)>>1;if(new Date(arr[mid].date).getTime()<ts)lo=mid+1;else hi=mid;}
+  if(lo>0&&Math.abs(new Date(arr[lo-1].date).getTime()-ts)<Math.abs(new Date(arr[lo].date).getTime()-ts))return arr[lo-1];
+  return arr[lo];
+}
 function drawInfoBox(ctx,ca,ts,isSpx){
   const lines=[{text:new Date(ts).toISOString().slice(0,10),color:'rgba(200,207,216,0.65)'}];
   if(isSpx&&cache?.sp?.length){
-    let best=cache.sp[0],bd=Infinity;
-    for(const o of cache.sp){const d=Math.abs(new Date(o.date).getTime()-ts);if(d<bd){bd=d;best=o;}}
-    lines.push({text:`SPX  ${Math.round(best.value).toLocaleString()}`,color:'#e6edf3'});
+    const best=nearestByTs(cache.sp,ts);
+    if(best)lines.push({text:`SPX  ${Math.round(best.value).toLocaleString()}`,color:'#e6edf3'});
   }else if(!isSpx&&_daily?.length){
-    let best=_daily[0],bd=Infinity;
-    for(const o of _daily){const d=Math.abs(new Date(o.date).getTime()-ts);if(d<bd){bd=d;best=o;}}
-    const f=v=>`${v>=0?'+':''}${v.toFixed(2)}%`;
-    lines.push({text:`10Y-2Y  ${f(best.s1)}`,color:'#8b949e'});
-    lines.push({text:`2Y-3M   ${f(best.s2)}`,color:'#3fb950'});
-    lines.push({text:`10Y-3M  ${f(best.s3)}`,color:'#ffa657'});
+    const best=nearestByTs(_daily,ts);
+    if(best){
+      const f=v=>`${v>=0?'+':''}${v.toFixed(2)}%`;
+      lines.push({text:`10Y-2Y  ${f(best.s1)}`,color:'#8b949e'});
+      lines.push({text:`2Y-3M   ${f(best.s2)}`,color:'#3fb950'});
+      lines.push({text:`10Y-3M  ${f(best.s3)}`,color:'#ffa657'});
+    }
   }
   ctx.save();
   ctx.font='9px Courier New';
