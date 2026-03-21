@@ -418,7 +418,8 @@ S&P 500이 고점 대비 -15% 이하로
 </div>
 
 <script>
-let apiKey=localStorage.getItem('fredApiKey')||'';
+const DEFAULT_KEY='cbafa9921ca0db42aa2f6f2b52379b36';
+let apiKey=localStorage.getItem('fredApiKey')||DEFAULT_KEY;
 let cache=null,spxChart=null,spreadChart=null,retDistChart=null,currentYears=20;
 let _daily=[],_sigs=[],_analyzed=[],_partialAnalyzed=[],_partialResult=null,_recPeriods=[],_fedfunds=[],logScale=false;
 let _spData=[],_currentEvtIdx=0,_colExtVisible=true;
@@ -448,7 +449,7 @@ function showDash(){
   loadData();
 }
 function submitKey(){const k=document.getElementById('kinp').value.trim();if(!k)return;apiKey=k;localStorage.setItem('fredApiKey',k);showDash();}
-function clearKey(){localStorage.removeItem('fredApiKey');location.reload();}
+function clearKey(){localStorage.removeItem('fredApiKey');apiKey=DEFAULT_KEY;location.reload();}
 
 async function fetchSPX(){
   const isLocal=location.hostname==='localhost'||location.hostname==='127.0.0.1';
