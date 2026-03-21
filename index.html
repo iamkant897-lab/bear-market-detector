@@ -479,11 +479,34 @@ async function fetchSPX(){
   console.warn('SPX 프록시 모두 실패 → FRED SP500 fallback (2016~)');
   return fred('SP500','2016-01-01');
 }
+async function fredFetch(url){
+  // 1) 직접 시도 (CORS 지원 환경이면 빠름)
+  try{
+    const r=await fetch(url,{signal:AbortSignal.timeout(10000)});
+    if(r.ok)return await r.json();
+    const j=await r.json().catch(()=>null);
+    if(j)return j; // FRED 에러 응답 (400 등) 그대로 반환
+  }catch(_){}
+  // 2) corsproxy.io
+  try{
+    const r=await fetch('https://corsproxy.io/?'+encodeURIComponent(url),{signal:AbortSignal.timeout(12000)});
+    if(r.ok)return await r.json();
+  }catch(_){}
+  // 3) allorigins.win
+  try{
+    const r=await fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(url),{signal:AbortSignal.timeout(12000)});
+    if(r.ok)return await r.json();
+  }catch(_){}
+  throw new Error('FRED 연결 실패 (직접·프록시 모두 차단됨)');
+}
 async function fred(id,start='1985-01-01'){
   const isLocal=location.hostname==='localhost'||location.hostname==='127.0.0.1';
-  const url=isLocal?`/api/fred/series/observations?series_id=${id}&api_key=${apiKey}&file_type=json&observation_start=${start}&sort_order=asc`:`https://api.stlouisfed.org/fred/series/observations?series_id=${id}&api_key=${apiKey}&file_type=json&observation_start=${start}&sort_order=asc`;
-  const r=await fetch(url);if(!r.ok)throw new Error(`HTTP ${r.status} [${id}]`);
-  const j=await r.json();if(j.error_code)throw new Error(j.error_message);
+  const url=isLocal
+    ?`/api/fred/series/observations?series_id=${id}&api_key=${apiKey}&file_type=json&observation_start=${start}&sort_order=asc`
+    :`https://api.stlouisfed.org/fred/series/observations?series_id=${id}&api_key=${apiKey}&file_type=json&observation_start=${start}&sort_order=asc`;
+  const j=isLocal?await (await fetch(url)).json():await fredFetch(url);
+  if(!j)throw new Error(`FRED ${id} 응답 없음`);
+  if(j.error_code)throw new Error(j.error_message||`API 키 오류 [${id}]`);
   return j.observations.filter(o=>o.value!=='.').map(o=>({date:o.date,value:+o.value}));
 }
 
@@ -504,33 +527,50 @@ async function loadData(forceRefresh=false){
       }
     }catch(e){}
   }
+  const loadingEl=document.getElementById('loading');
   if(!hasCached){
-    document.getElementById('loading').style.display='block';
+    loadingEl.innerHTML=`<span class="spin"></span>FRED 데이터 로딩 중...`;
+    loadingEl.style.display='block';
     document.getElementById('content').style.display='none';
   }
-  try{
-    const [d10,d2,d3m,sp,usrec,fedfunds]=await Promise.all([fred('DGS10'),fred('DGS2'),fred('DGS3MO'),fetchSPX(),fred('USREC'),fred('FEDFUNDS')]);
-    cache={d10,d2,d3m,sp,usrec,fedfunds};
-    try{localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),data:cache}));}catch(e){}
-    render(cache);
-    document.getElementById('last-upd').textContent=`갱신: ${new Date().toLocaleString('ko-KR')}`;
-    document.getElementById('loading').style.display='none';
-    document.getElementById('content').style.display='block';
-  }catch(e){
-    const isKeyErr=e.message?.includes('400')||e.message?.includes('key')||e.message?.includes('api_key');
-    const msg=isKeyErr
-      ?`API 키 오류: 키가 유효하지 않습니다. 키를 다시 확인해주세요.`
-      :`데이터 로딩 실패: ${e.message}`;
+  const showErr=(msg,isKeyErr)=>{
     if(!hasCached){
-      document.getElementById('loading').innerHTML=`
+      loadingEl.innerHTML=`
         <div class="errmsg">${msg}</div>
         <div style="margin-top:12px;display:flex;gap:8px;justify-content:center">
-          <button class="btn btn-b" onclick="loadData()">⟳ 재시도</button>
+          <button class="btn btn-b" onclick="loadData(true)">⟳ 재시도</button>
           ${isKeyErr?`<button class="btn btn-r" onclick="clearKey()">× 키 변경</button>`:''}
         </div>`;
     }else{
       document.getElementById('last-upd').textContent=`갱신 실패 — 캐시 사용 중`;
     }
+  };
+  // 개별 fetch를 태그와 함께 실행해 어디서 실패했는지 파악
+  const tag=(label,p)=>p.catch(e=>{throw new Error(`[${label}] ${e.message}`);});
+  try{
+    const [d10,d2,d3m,sp,usrec,fedfunds]=await Promise.all([
+      tag('DGS10',fred('DGS10')),
+      tag('DGS2',fred('DGS2')),
+      tag('DGS3MO',fred('DGS3MO')),
+      tag('SPX',fetchSPX()),
+      tag('USREC',fred('USREC')),
+      tag('FEDFUNDS',fred('FEDFUNDS')),
+    ]);
+    cache={d10,d2,d3m,sp,usrec,fedfunds};
+    try{localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),data:cache}));}catch(e){}
+    render(cache);
+    document.getElementById('last-upd').textContent=`갱신: ${new Date().toLocaleString('ko-KR')}`;
+    loadingEl.style.display='none';
+    document.getElementById('content').style.display='block';
+  }catch(e){
+    const msg=e.message||'';
+    const isKeyErr=msg.includes('400')||msg.includes('403')||msg.includes('Bad Request')||msg.includes('api_key')||msg.includes('API key');
+    const isNetErr=msg.includes('Failed to fetch')||msg.includes('NetworkError')||msg.includes('fetch');
+    let errText;
+    if(isKeyErr) errText=`API 키 오류: 키가 유효하지 않거나 아직 활성화되지 않았습니다.<br><small style="color:var(--t3)">FRED 키 발급 후 최대 24시간이 걸릴 수 있습니다.</small>`;
+    else if(isNetErr) errText=`네트워크 오류: 인터넷 연결을 확인해주세요.<br><small style="color:var(--t3)">${msg}</small>`;
+    else errText=`데이터 로딩 실패<br><small style="color:var(--t3)">${msg}</small>`;
+    showErr(errText,isKeyErr);
   }
 }
 
