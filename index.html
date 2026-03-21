@@ -1081,22 +1081,7 @@ function drawAnnotations(ctx, x, y, items){
   ctx.restore();
 }
 
-function makeTooltipCfg(isSpx){
-  return{
-    backgroundColor:'rgba(13,17,23,0.45)',borderColor:'rgba(48,54,61,0.4)',borderWidth:1,
-    titleColor:'rgba(139,148,158,0.85)',bodyColor:'rgba(230,237,243,0.85)',
-    titleFont:{family:'Courier New',size:10},bodyFont:{family:'Courier New',size:11},
-    callbacks:{
-      label:c=>isSpx?` S&P 500: ${c.parsed.y.toLocaleString()}`:c.dataset.yAxisID==='y1'?` FF금리: ${c.parsed.y.toFixed(2)}%`:` ${c.dataset.label}: ${c.parsed.y>=0?'+':''}${c.parsed.y.toFixed(2)}%`,
-      afterBody:items=>{
-        if(!items.length)return[];
-        const ts=items[0].parsed.x;
-        const ds=new Date(ts).toISOString().slice(0,10);
-        const ctx=getDateContext(ds);return ctx?[ctx]:[];
-      }
-    }
-  };
-}
+function makeTooltipCfg(){return{enabled:false};}
 
 // ③ 공유 annoItems 빌더 — SPX/스프레드 차트 양쪽 공용
 function buildAnnoItems(invPeriods,deInvPeriods,confirmDates,troughEntries,partialAnalyzed,partialTroughEntries,partialResult,mode){
@@ -1379,27 +1364,57 @@ function setupCrosshairs(){
   ['spx-chart','spread-chart'].forEach((cid,idx)=>{
     const canvas=document.getElementById(cid);if(!canvas)return;
     const isSpx=idx===0;
-    // cloneNode 대신 이전 리스너를 캔버스 프로퍼티로 관리 (캔버스 교체 없음)
     if(canvas._chMove)canvas.removeEventListener('mousemove',canvas._chMove);
     if(canvas._chLeave)canvas.removeEventListener('mouseleave',canvas._chLeave);
-    canvas._chMove=e=>{
+    if(canvas._chTMove)canvas.removeEventListener('touchmove',canvas._chTMove);
+    if(canvas._chTEnd)canvas.removeEventListener('touchend',canvas._chTEnd);
+    const doMove=(clientX)=>{
       const chart=isSpx?spxChart:spreadChart,other=isSpx?spreadChart:spxChart;
       const ov=isSpx?spxOverlay:spreadOverlay,otherOv=isSpx?spreadOverlay:spxOverlay;
       if(!chart||!other)return;
-      const rect=canvas.getBoundingClientRect(),mx=e.clientX-rect.left;
+      const rect=canvas.getBoundingClientRect(),mx=clientX-rect.left;
       const ca=chart.chartArea;
       if(mx<ca.left||mx>ca.right){clearOv(ov);clearOv(otherOv);return;}
       const val=chart.scales.x.getValueForPixel(mx);
       const otherX=other.scales.x.getPixelForValue(val);
-      drawCh(ov,chart,mx);drawCh(otherOv,other,otherX);
+      drawCh(ov,chart,mx,isSpx);drawCh(otherOv,other,otherX,!isSpx);
     };
+    canvas._chMove=e=>doMove(e.clientX);
     canvas._chLeave=()=>{clearOv(spxOverlay);clearOv(spreadOverlay);};
+    canvas._chTMove=e=>{if(e.touches?.length)doMove(e.touches[0].clientX);};
+    canvas._chTEnd=()=>{clearOv(spxOverlay);clearOv(spreadOverlay);};
     canvas.addEventListener('mousemove',canvas._chMove);
     canvas.addEventListener('mouseleave',canvas._chLeave);
+    canvas.addEventListener('touchmove',canvas._chTMove,{passive:true});
+    canvas.addEventListener('touchend',canvas._chTEnd);
   });
 }
 function clearOv(ov){if(ov)ov.getContext('2d').clearRect(0,0,ov.width,ov.height);}
-function drawCh(ov,chart,x){
+function drawInfoBox(ctx,ca,ts,isSpx){
+  const lines=[{text:new Date(ts).toISOString().slice(0,10),color:'rgba(200,207,216,0.65)'}];
+  if(isSpx&&cache?.sp?.length){
+    let best=cache.sp[0],bd=Infinity;
+    for(const o of cache.sp){const d=Math.abs(new Date(o.date).getTime()-ts);if(d<bd){bd=d;best=o;}}
+    lines.push({text:`SPX  ${Math.round(best.value).toLocaleString()}`,color:'#e6edf3'});
+  }else if(!isSpx&&_daily?.length){
+    let best=_daily[0],bd=Infinity;
+    for(const o of _daily){const d=Math.abs(new Date(o.date).getTime()-ts);if(d<bd){bd=d;best=o;}}
+    const f=v=>`${v>=0?'+':''}${v.toFixed(2)}%`;
+    lines.push({text:`10Y-2Y  ${f(best.s1)}`,color:'#8b949e'});
+    lines.push({text:`2Y-3M   ${f(best.s2)}`,color:'#3fb950'});
+    lines.push({text:`10Y-3M  ${f(best.s3)}`,color:'#ffa657'});
+  }
+  ctx.save();
+  ctx.font='9px Courier New';
+  const lh=13,pad=5;
+  const bw=lines.reduce((m,l)=>Math.max(m,ctx.measureText(l.text).width),0)+pad*2;
+  const bh=lines.length*lh+pad;
+  ctx.fillStyle='rgba(13,17,23,0.82)';
+  ctx.fillRect(ca.left+4,ca.top+4,bw,bh);
+  lines.forEach((l,i)=>{ctx.fillStyle=l.color;ctx.textAlign='left';ctx.fillText(l.text,ca.left+4+pad,ca.top+4+pad+(i+0.78)*lh);});
+  ctx.restore();
+}
+function drawCh(ov,chart,x,isSpx){
   if(!ov||!chart)return;
   const ctx=ov.getContext('2d'),ca=chart.chartArea;
   ctx.clearRect(0,0,ov.width,ov.height);
@@ -1407,12 +1422,11 @@ function drawCh(ov,chart,x){
   ctx.save();
   ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
   ctx.beginPath();ctx.moveTo(x,ca.top);ctx.lineTo(x,ca.bottom);ctx.stroke();
-  // 날짜 레이블
   const ts=chart.scales.x.getValueForPixel(x);
-  const ds=new Date(ts).toISOString().slice(0,7);
   const lx=Math.min(Math.max(x,ca.left+22),ca.right-22);
   ctx.font='9px Courier New';ctx.fillStyle='rgba(230,237,243,0.6)';ctx.textAlign='center';
-  ctx.fillText(ds,lx,ca.bottom+12);
+  ctx.fillText(new Date(ts).toISOString().slice(0,7),lx,ca.bottom+12);
+  drawInfoBox(ctx,ca,ts,isSpx);
   ctx.restore();
 }
 
