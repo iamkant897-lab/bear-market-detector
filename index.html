@@ -372,10 +372,6 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
         <div class="pc-val" id="pc-dday" style="color:var(--blue)">—</div>
         <div class="pc-lbl" style="margin-top:6px">최근 SPX</div>
         <div class="pc-val" id="pc-spx">—</div>
-        <div class="pc-lbl" style="margin-top:6px">오늘 방문</div>
-        <div class="pc-val" id="vc-daily">—</div>
-        <div class="pc-lbl" style="margin-top:6px">누적 방문</div>
-        <div class="pc-val" id="vc-total">—</div>
       </div>
       <div id="phase-progress">
         <div class="pp-step" id="pp-0">① 정상</div>
@@ -1086,8 +1082,13 @@ async function initVisitorCount(){
   };
   try{
     const [tot,day]=await Promise.all([hit('total'),hit('d'+today)]);
-    if(tot!=null)document.getElementById('vc-total').textContent=tot.toLocaleString()+'명';
-    if(day!=null)document.getElementById('vc-daily').textContent=day.toLocaleString()+'명';
+    const el=document.getElementById('vc-footer');
+    if(el&&(tot!=null||day!=null)){
+      const parts=[];
+      if(day!=null)parts.push('오늘 '+day.toLocaleString()+'명');
+      if(tot!=null)parts.push('누적 '+tot.toLocaleString()+'명');
+      el.textContent=parts.join(' · ');
+    }
   }catch(_){}
 }
 
@@ -1863,7 +1864,8 @@ function setRange(y,btn){
 <footer style="text-align:center;padding:24px 16px;color:rgba(139,148,158,0.5);font-size:10px;font-family:var(--font);border-top:1px solid var(--bd);margin-top:32px;line-height:1.8">
   본 대시보드는 교육·연구 목적으로 제공되며 투자 권유 또는 금융 조언이 아닙니다.<br>
   과거 데이터에 기반한 분석이며 미래 수익을 보장하지 않습니다. 모든 투자 결정의 책임은 본인에게 있습니다.<br>
-  <span style="color:rgba(139,148,158,0.3)">Data: FRED (Federal Reserve Bank of St. Louis) · S&P 500</span>
+  <span style="color:rgba(139,148,158,0.3)">Data: FRED (Federal Reserve Bank of St. Louis) · S&P 500</span><br>
+  <span id="vc-footer" style="color:rgba(139,148,158,0.35)">—</span>
 </footer>
 </body>
 </html>
