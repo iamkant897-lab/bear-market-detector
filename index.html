@@ -225,31 +225,46 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
   .intro-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:768px){
-  #dash{padding:12px 14px}
-  .hdr{padding:10px 16px}
+  #dash{padding:12px 12px}
+  .hdr{padding:10px 14px}
   .hdr-sub{display:none}
-  #spx-wrap{height:240px}
-  #spread-wrap{height:220px}
-  #dist-wrap{height:180px}
+  #spx-wrap{height:230px}
+  #spread-wrap{height:210px}
+  #dist-wrap{height:170px}
   #monthly-panel{grid-template-columns:1fr !important}
+  /* 차트 패널 헤더: 범례 숨기고 버튼만 */
   .ph{flex-direction:column;align-items:flex-start;gap:6px}
+  .lg{display:none}
+  /* PNG 저장·리셋 버튼 숨김 */
+  .rb-save,.rb-reset{display:none}
   .htable{font-size:11px}
   .htable td,.htable th{padding:7px 8px}
   .bgrid{grid-template-columns:1fr}
   .tpanel,.lpanel{overflow-x:auto}
   .banner{flex-direction:column;align-items:flex-start;gap:6px}
-  .api-box{width:calc(100vw - 32px);padding:24px 20px}
+  .banner::before{width:100%;height:3px;top:0;left:0;bottom:auto;border-radius:var(--r) var(--r) 0 0}
+  .api-box{width:calc(100vw - 24px);padding:24px 18px}
+  /* 통계 카드: 가로 스크롤 */
+  .stats-row,.stats-row2{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:8px;padding-bottom:6px;margin-bottom:10px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .stats-row::-webkit-scrollbar,.stats-row2::-webkit-scrollbar{display:none}
+  .sc,.sc2{min-width:140px;flex-shrink:0}
+  /* 인트로 그리드 */
+  .intro-grid{grid-template-columns:1fr}
 }
 @media(max-width:600px){
-  #phase-card{grid-template-columns:1fr 1fr;gap:10px}
-  #phase-card>:nth-child(2){grid-column:1/-1;grid-template-columns:repeat(2,1fr)}
-  #phase-progress{gap:3px}
+  /* phase card: 단순 1열 스택 */
+  #phase-card{grid-template-columns:1fr;gap:12px}
+  #phase-card>:nth-child(2){grid-template-columns:repeat(3,1fr)}
+  #phase-progress{gap:3px;flex-wrap:wrap}
   .pp-arrow{padding:0 2px;font-size:9px}
   .sc-val{font-size:18px}
   .sc2-val{font-size:15px}
   .hdr-r .btn{display:none}
-  #spx-wrap{height:200px}
-  #spread-wrap{height:190px}
+  #spx-wrap{height:190px}
+  #spread-wrap{height:180px}
+  /* 진행단계 화살표 숨김 (공간 절약) */
+  .pp-arrow{display:none}
+  .pp-step{font-size:10px;padding:4px 10px}
 }
 </style>
 </head>
@@ -523,8 +538,8 @@ S&P 500이 고점 대비 -15% 이하로
             <button class="rb on" onclick="setRange(20,this)">20Y</button>
             <button class="rb" onclick="setRange(99,this)">ALL</button>
             <button class="rb" id="btn-log" onclick="toggleLogScale(this)" style="margin-left:4px">로그</button>
-            <button class="rb" onclick="resetZoom()" style="border-color:#bc8cff;color:#bc8cff;margin-left:2px">↺ 리셋</button>
-            <button class="rb" onclick="saveChart('spx')" style="margin-left:2px">⬇ PNG</button>
+            <button class="rb rb-reset" onclick="resetZoom()" style="border-color:#bc8cff;color:#bc8cff;margin-left:2px">↺ 리셋</button>
+            <button class="rb rb-save" onclick="saveChart('spx')" style="margin-left:2px">⬇ PNG</button>
             <span style="margin-left:8px;border-left:1px solid var(--bd);padding-left:8px;display:flex;gap:3px">
               <button class="rb" onclick="navEvent(-1)" title="이전 이벤트">◀</button>
               <span id="evt-idx" style="font-size:10px;color:var(--t2);padding:2px 6px;align-self:center">—</span>
@@ -551,7 +566,7 @@ S&P 500이 고점 대비 -15% 이하로
             <div class="li"><div style="width:14px;height:8px;background:rgba(210,153,34,.2);border:1px solid #d29922;border-radius:2px"></div>해소 진행중</div>
             <div class="li"><div style="width:14px;height:8px;background:rgba(120,120,130,0.3);border:1px solid rgba(150,150,150,0.4);border-radius:2px"></div>NBER 침체</div>
           </div>
-          <button class="rb" onclick="saveChart('spread')" style="margin-left:2px">⬇ PNG</button>
+          <button class="rb rb-save" onclick="saveChart('spread')" style="margin-left:2px">⬇ PNG</button>
         </div>
       </div>
       <div class="cw" id="spread-wrap"><canvas id="spread-chart"></canvas></div>
