@@ -122,7 +122,7 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
 .c-purple .sc-val,.c-purple .sc2-val{color:var(--purple)}
 
 /* ── 액션 가이드 ── */
-#action-guide{border-left:3px solid var(--blue);background:rgba(88,166,255,.05);padding:12px 18px;margin-bottom:12px;display:none;border-radius:0 var(--r-sm) var(--r-sm) 0}
+#action-guide{border-left:3px solid var(--blue);background:rgba(88,166,255,.05);padding:12px 18px;margin-bottom:12px;display:none;border-radius:var(--r)}
 #action-guide .ag-lbl{color:var(--blue);font-size:11px;letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px;font-weight:600}
 #action-guide .ag-txt{font-size:13px;color:var(--t1);line-height:1.8}
 
@@ -445,7 +445,7 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
     </div>
 
     <!-- 월간 분석 워크플로우 패널 -->
-    <div id="monthly-panel" style="background:var(--bg1);border:1px solid rgba(88,166,255,0.25);padding:16px 20px;margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+    <div id="monthly-panel" style="background:var(--bg1);border:1px solid rgba(88,166,255,0.25);border-radius:var(--r);padding:16px 20px;margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;box-shadow:var(--sh)">
       <div>
         <div style="color:var(--blue);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px">◈ 이번달 체크포인트</div>
         <div id="mc-checklist" style="font-size:12px;line-height:2"></div>
