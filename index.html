@@ -82,10 +82,6 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:13p
 #action-guide .ag-lbl{color:var(--blue);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px}
 #action-guide .ag-txt{font-size:12px;color:var(--t1);line-height:1.8}
 .htable tr.row-latest td{background:rgba(88,166,255,.06)!important;border-bottom:1px solid rgba(88,166,255,.25)!important}
-.expert-only{display:none}
-#expert-hint{background:var(--bg1);border:1px solid var(--bd);padding:10px 18px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--t3)}
-#expert-hint span{letter-spacing:.5px}
-.btn-expert-on{border-color:var(--orange)!important;color:var(--orange)!important}
 .c-green .sc-val,.c-green .sc2-val{color:var(--green)}
 .c-yellow .sc-val,.c-yellow .sc2-val{color:var(--yellow)}
 .c-red .sc-val,.c-red .sc2-val{color:var(--red)}
@@ -215,7 +211,6 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:13p
   <div class="hdr-r">
     <span id="month-dday" style="color:var(--blue);font-size:11px;font-weight:bold;letter-spacing:1px"></span>
     <span id="last-upd" style="color:var(--t2);font-size:11px">—</span>
-    <button class="btn" id="btn-expert" onclick="setExpertMode(!expertMode)">전문가 모드</button>
     <button class="btn btn-b" id="btn-ref" onclick="loadData(true)" style="display:none">⟳ REFRESH</button>
     <button class="btn btn-r" id="btn-key" onclick="clearKey()" style="display:none">× KEY</button>
   </div>
@@ -401,7 +396,7 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:13p
     </div>
 
     <!-- 월간 분석 워크플로우 패널 -->
-    <div id="monthly-panel" class="expert-only" style="background:var(--bg1);border:1px solid rgba(88,166,255,0.25);padding:16px 20px;margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+    <div id="monthly-panel" style="background:var(--bg1);border:1px solid rgba(88,166,255,0.25);padding:16px 20px;margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
       <div>
         <div style="color:var(--blue);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px">◈ 이번달 체크포인트</div>
         <div id="mc-checklist" style="font-size:12px;line-height:2"></div>
@@ -436,10 +431,10 @@ s2 + s3 양전환 → 해소 기준</span></span></div><div class="sc-val" id="s
 s2 + s3 동시 음수 → 역전 시작
 s3 3개월 연속 양수 → 2종 해소 확정</span></span></div><div class="sc-val" id="sv2">—</div><div class="sc-bar-wrap"><div class="sc-bar-center"></div><div class="sc-bar-fill" id="sb2"></div></div><div style="display:flex;justify-content:space-between;align-items:center"><div class="sc-sub" id="ss2">DGS10 − DGS3MO</div><span class="sc-badge" id="sbadge2"></span></div></div>
       <div class="sc c-blue"><div class="sc-lbl">역사적 평균 시차</div><div class="sc-val" id="sv-avg">—</div><div class="sc-sub">역전해소 → SPX -20%</div></div>
-      <div class="sc c-orange expert-only"><div class="sc-lbl">최단 시차</div><div class="sc-val" id="sv-min">—</div><div class="sc-sub">역사적 최단</div></div>
-      <div class="sc c-purple expert-only"><div class="sc-lbl">최장 시차</div><div class="sc-val" id="sv-max">—</div><div class="sc-sub">역사적 최장</div></div>
+      <div class="sc c-orange"><div class="sc-lbl">최단 시차</div><div class="sc-val" id="sv-min">—</div><div class="sc-sub">역사적 최단</div></div>
+      <div class="sc c-purple"><div class="sc-lbl">최장 시차</div><div class="sc-val" id="sv-max">—</div><div class="sc-sub">역사적 최장</div></div>
     </div>
-    <div class="stats-row2 expert-only">
+    <div class="stats-row2">
       <div class="sc2"><div class="sc2-lbl" style="display:flex;align-items:flex-start;gap:4px">스프레드 3종 역전 해소 뒤 침체 예측 성공률<span class="tip"><span class="tip-icon">?</span><span class="tip-box">3종 역전(s1+s2+s3 모두 음수) 해소 후
 S&P 500이 고점 대비 -20% 이하로
 하락한 비율 (30개월 내 미도달 제외)</span></span></div><div class="sc2-val" id="sv-rate">—</div><div class="sc2-sub">s1+s2+s3 동시역전 해소 → SPX -20% 이내 (추적중 제외)</div></div>
@@ -450,7 +445,7 @@ S&P 500이 고점 대비 -20% 이하로
       <div class="sc2 c-purple"><div class="sc2-lbl">현재 기준금리</div><div class="sc2-val" id="sv-ff">—</div><div class="sc2-sub">FEDFUNDS</div></div>
     </div>
     <!-- 비교적 역전 통계 (s1 미합류, 순수 2종만) -->
-    <div class="stats-row2 expert-only" id="partial-stats-row">
+    <div class="stats-row2" id="partial-stats-row">
       <div class="sc2 c-blue"><div class="sc2-lbl" style="display:flex;align-items:flex-start;gap:4px">스프레드 2종 역전 해소 뒤 조정 예측 성공률<span class="tip"><span class="tip-icon">?</span><span class="tip-box">2종 역전(s2+s3만 음수, s1 미참여) 해소 후
 S&P 500이 고점 대비 -15% 이하로
 하락한 비율 (3종 겹침·추적중 제외)</span></span></div><div class="sc2-val" id="sv-pc-rate">—</div><div class="sc2-sub">s2+s3 역전 해소 → SPX -15% 이내 · 순수 2종만 (3종 제외)</div></div>
@@ -514,7 +509,7 @@ S&P 500이 고점 대비 -15% 이하로
     </div>
 
     <!-- 수익률 분포 -->
-    <div class="cpanel expert-only" id="dist-panel">
+    <div class="cpanel">
       <div class="ph">
         <div class="pt">◈ 확정 후 SPX 수익률 분포 — 이벤트별 추적</div>
         <div class="lg">
@@ -529,15 +524,9 @@ S&P 500이 고점 대비 -15% 이하로
     </div>
 
     <!-- 유사 사례 하이라이트 -->
-    <div id="similar-section" class="expert-only" style="margin-bottom:14px"></div>
+    <div id="similar-section" style="display:none;margin-bottom:14px"></div>
 
-    <!-- 전문가 모드 힌트 -->
-    <div id="expert-hint">
-      <span>📊 수익률 분포 · 이력 테이블 · 상세 통계 등 더 많은 데이터를 보려면</span>
-      <button class="btn" onclick="setExpertMode(true)" style="font-size:10px;padding:4px 12px">전문가 모드 켜기 →</button>
-    </div>
-
-    <div class="bgrid expert-only">
+    <div class="bgrid">
       <div class="lpanel">
         <div class="ph"><div class="pt">◈ 이벤트 로그</div></div>
         <div class="llist" id="llist"></div>
@@ -580,26 +569,6 @@ S&P 500이 고점 대비 -15% 이하로
 const DEFAULT_KEY='cbafa9921ca0db42aa2f6f2b52379b36';
 let apiKey=localStorage.getItem('fredApiKey')||DEFAULT_KEY;
 let cache=null,spxChart=null,spreadChart=null,retDistChart=null,currentYears=20;
-let expertMode=localStorage.getItem('expertMode')==='1';
-function setExpertMode(on){
-  expertMode=on;
-  localStorage.setItem('expertMode',on?'1':'0');
-  const btn=document.getElementById('btn-expert');
-  if(btn){btn.textContent=on?'간단히 보기':'전문가 모드';btn.classList.toggle('btn-expert-on',on);}
-  document.querySelectorAll('.expert-only').forEach(el=>el.style.display=on?'':'none');
-  const hint=document.getElementById('expert-hint');
-  if(hint)hint.style.display=on?'none':'flex';
-  // stats-row 컬럼 수 조정
-  const sr=document.querySelector('.stats-row');
-  if(sr)sr.style.gridTemplateColumns=on?'repeat(6,1fr)':'repeat(4,1fr)';
-  // 차트 크기 재조정
-  setTimeout(()=>{
-    if(on&&retDistChart)retDistChart.resize();
-    syncChartAreas();
-  },50);
-}
-// 초기 적용
-document.addEventListener('DOMContentLoaded',()=>setExpertMode(expertMode));
 let _daily=[],_sigs=[],_analyzed=[],_partialAnalyzed=[],_partialResult=null,_recPeriods=[],_fedfunds=[],logScale=false;
 let _spData=[],_currentEvtIdx=0,_colExtVisible=true;
 // 주요 시장 이벤트 (SPX 고점 기준)
@@ -1785,7 +1754,7 @@ function renderTable(analyzed){
 
 function renderSimilarCase(phase,analyzed,negRun,posRun,invStart){
   const sec=document.getElementById('similar-section');
-  if(!sec||!analyzed.length){if(sec)sec.innerHTML='';return;}
+  if(!sec||!analyzed.length){if(sec)sec.style.display='none';return;}
   // 완료된 사례 중 가장 유사한 것 찾기
   let best=null,bestScore=Infinity;
   const currentInvMonths=negRun||0;
@@ -1796,13 +1765,14 @@ function renderSimilarCase(phase,analyzed,negRun,posRun,invStart){
     if(phase==='idle'||phase==='signal_active')score+=100; // 이 상태엔 그냥 최근 사례 보여주기
     if(score<bestScore){bestScore=score;best=a;}
   }
-  if(!best){sec.innerHTML='';return;}
+  if(!best){sec.style.display='none';return;}
   const invDurM=best.invStart&&best.deInvStart?Math.round((new Date(best.deInvStart)-new Date(best.invStart))/(1000*60*60*24*30.4)):null;
   const deInvDurM=best.deInvStart&&best.confirmDate?Math.round((new Date(best.confirmDate)-new Date(best.deInvStart))/(1000*60*60*24*30.4)):null;
   const isBear=best.mToBear!==null;
   const phaseLabel={idle:'정상 — 과거 마지막 사례',inv_building:'역전 중 — 과거 유사 사례',inv_active:'역전 중 — 과거 유사 사례',deinv_building:'해소 중 — 과거 유사 사례',deinv_reinv:'해소 재역전 — 과거 유사 사례',signal_active:'신호 확정 — 직전 사례'};
   const hint={idle:'참고용으로 가장 최근 완료된 사례입니다.',inv_building:`현재 역전 ${currentInvMonths}개월 — 과거 이 사례도 비슷한 기간 역전이 있었습니다.`,inv_active:`현재 역전 ${currentInvMonths}개월 — 이 사례와 역전 기간이 가장 유사합니다.`,deinv_building:'해소가 진행 중입니다. 이 사례의 해소 이후 결과를 참고하세요.',deinv_reinv:'해소 중 재역전이 발생했습니다. 이 사례를 참고하세요.',signal_active:'신호가 확정된 직후입니다. 이 사례의 이후 수익률을 참고하세요.'};
   const r=v=>v!=null?`${v>=0?'+':''}${v.toFixed(1)}%`:'—';
+  sec.style.display='block';
   sec.innerHTML=`<div class="similar-card">
     <div style="flex:0 0 auto">
       <div class="similar-card-title">◈ ${phaseLabel[phase]||'유사 사례'}</div>
