@@ -127,14 +127,14 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:13p
 .intro-body{padding:0 18px 14px;font-size:11px;color:var(--t2);line-height:1.8;display:none;border-top:1px solid rgba(88,166,255,.15)}
 .intro-body.open{display:block}
 .intro-body b{color:var(--t1)}
-.intro-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px}
+.intro-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
 .intro-card{background:var(--bg2);border:1px solid var(--bd);padding:10px 12px;font-size:10px;line-height:1.7}
 .intro-card-title{color:var(--blue);font-weight:bold;margin-bottom:4px;font-size:11px}
 /* ── 모바일 ── */
 @media(max-width:1100px){
   .stats-row,.stats-row2{grid-template-columns:repeat(3,1fr)}
   .bgrid{grid-template-columns:1fr}
-  .intro-grid{grid-template-columns:1fr}
+  .intro-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:768px){
   #dash{padding:10px 12px}
@@ -252,6 +252,12 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:13p
             일봉·주봉은 일시적 변동(노이즈)이 많아 <b>오신호</b>가 자주 발생합니다.<br>
             "일봉/주봉은 이미 역전됐는데 왜 신호가 없지?"<br>
             → 월봉 종가 기준 조건을 아직 충족하지 않은 것입니다.
+          </div>
+          <div class="intro-card">
+            <div class="intro-card-title">🏦 데이터 출처: 연준(FRED)</div>
+            금리 데이터는 <b>시장 호가(US10Y 등)가 아닌</b> 연방준비제도(Fed)가 직접 산출·발표하는 공식 수치를 사용합니다.<br>
+            <b>DGS10</b> (10년물) · <b>DGS2</b> (2년물) · <b>DGS3MO</b> (3개월물)<br>
+            TradingView·Bloomberg 등의 US10Y와 소수점 단위 차이가 날 수 있습니다.
           </div>
           <div class="intro-card">
             <div class="intro-card-title">📈 수익률 테이블 읽는 법</div>
@@ -981,6 +987,12 @@ function updateCards(latest,analyzed,fedfunds){
     if(v!==null)el.style.color=v<0?'var(--red)':v>5?'var(--green)':'var(--yellow)';
   });
   if(fedfunds&&fedfunds.length)document.getElementById('sv-ff').textContent=fedfunds[fedfunds.length-1].value.toFixed(2)+'%';
+  // FRED 데이터 최신 날짜 표시
+  if(latest?.date){
+    const el=document.getElementById('last-upd');
+    const cur=el.textContent;
+    if(!cur.includes('기준'))el.textContent=cur+` · FRED 기준 ${latest.date}`;
+  }
   // 2종 통계 (단일 패스 재사용)
   const pcEl=document.getElementById('partial-stats-row');
   if(_partialAnalyzed&&_partialAnalyzed.length){
