@@ -423,7 +423,10 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
     <!-- 현재 위치 요약 카드 -->
     <div id="phase-card">
       <div>
-        <div class="pc-lbl">현재 상태</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <div class="pc-lbl" style="margin-bottom:0">현재 상태</div>
+          <div id="pc-zone" style="font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;letter-spacing:.5px">—</div>
+        </div>
         <div class="pc-phase" id="pc-phase">—</div>
         <div class="pc-sub" id="pc-sub">—</div>
       </div>
@@ -447,7 +450,10 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
         <div class="pp-arrow">→</div>
         <div class="pp-step" id="pp-3">④ 신호확정</div>
       </div>
-      <div id="pc-plain" style="grid-column:1/-1;font-size:12px;color:var(--t2);padding-top:8px;border-top:1px solid var(--bd);line-height:1.7">—</div>
+      <div style="grid-column:1/-1;padding-top:8px;border-top:1px solid var(--bd)">
+        <div id="pc-plain" style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:5px">—</div>
+        <div id="pc-action" style="font-size:12px;color:var(--t1);font-weight:600;line-height:1.6"></div>
+      </div>
     </div>
 
     <!-- 월간 분석 워크플로우 패널 -->
@@ -1100,6 +1106,23 @@ function updatePhaseCard(phase,invStart,deInvStart,analyzed,negRun){
     s.className='pp-step';
     if(i===activeStep)s.classList.add(stepColors[i]);
   });
+  // 대응 구간 뱃지
+  const zoneEl=document.getElementById('pc-zone');
+  if(zoneEl){
+    const zoneMap={
+      idle:      {label:'🟢 관망구간', bg:'rgba(63,185,80,.12)',  color:'var(--green)'},
+      inv_building:{label:'🟡 주의구간',bg:'rgba(210,153,34,.12)', color:'var(--yellow)'},
+      inv_active:  {label:'🟡 주의구간',bg:'rgba(210,153,34,.12)', color:'var(--yellow)'},
+      deinv_building:{label:'🟠 경고구간',bg:'rgba(255,166,87,.15)',color:'var(--orange)'},
+      deinv_reinv:   {label:'🟠 경고구간',bg:'rgba(255,166,87,.15)',color:'var(--orange)'},
+      signal_active: {label:'🔴 위험구간',bg:'rgba(248,81,73,.12)', color:'var(--red)'},
+    };
+    const z=zoneMap[phase]||{label:'—',bg:'transparent',color:'var(--t3)'};
+    zoneEl.textContent=z.label;
+    zoneEl.style.background=z.bg;
+    zoneEl.style.color=z.color;
+    zoneEl.style.border=`1px solid ${z.color}44`;
+  }
   // 한 줄 평문 요약
   const plainMap={
     idle:'모든 금리차가 정상입니다. 역전 신호 없음.',
@@ -1110,6 +1133,17 @@ function updatePhaseCard(phase,invStart,deInvStart,analyzed,negRun){
     signal_active:'하락장 신호 확정. 역사적으로 이후 수개월 내 S&P500 -20% 이상 하락 구간 발생.'
   };
   set('pc-plain',plainMap[phase]||'');
+  // 초보자 행동 가이드
+  const actionMap={
+    idle:'→ 지금은 관망하세요. 별도 행동 필요 없습니다.',
+    inv_building:'→ 매달 말 스프레드 수치를 확인하세요. 아직 포지션 변경 불필요.',
+    inv_active:'→ 지금 당장 행동하기보다 상황을 주시하세요. 해소 시작 시 경고구간으로 전환됩니다.',
+    deinv_building:'→ 보유 자산의 리스크를 점검하기 시작하세요. 신호 확정 시 방어적 포지션을 고려하세요.',
+    deinv_reinv:'→ 재역전 중입니다. 불확실 구간이므로 큰 움직임보다 관망이 유리합니다.',
+    signal_active:'→ 신호가 확정됐습니다. 포트폴리오 점검 및 방어적 자산 비중 확대를 고려하세요.'
+  };
+  const acEl=document.getElementById('pc-action');
+  if(acEl)acEl.textContent=actionMap[phase]||'';
   // D-Day: 이번 달 마지막 날까지 남은 일수
   const now2=new Date();
   const lastOfMonth=new Date(now2.getFullYear(),now2.getMonth()+1,0);
