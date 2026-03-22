@@ -1870,7 +1870,7 @@ function renderLog(phase,deInvStart,analyzed){
   else entries.push({c:'ls',t:now,m:'정상 상태. 유효 동시 역전 없음.'});
   [...analyzed].reverse().slice(0,6).forEach(a=>{
     const dd=a.drawdown?` | 최대하락: ${a.drawdown.toFixed(1)}%`:'';
-    const lag=a.mToBear?`확정→하락장: ${a.mToBear}개월`:'(하락장 미확인)';
+    const lag=a.mToBear!==null?`확정→하락장: ${a.mToBear}개월`:'(하락장 미확인)';
     entries.push({c:'ld',t:a.confirmDate,m:`🔴 [3종역전] 해소확정 | 역전: ${a.invStart} | 정상화: ${a.deInvStart} | ${lag}${dd}`});
   });
   if(_partialAnalyzed&&_partialAnalyzed.length){
@@ -1880,7 +1880,7 @@ function renderLog(phase,deInvStart,analyzed){
     else if(pr?.phase==='deinv_building')entries.push({c:'lw',t:now,m:`🔵 [2종역전] s3 해소 ${pr.posRun}개월째 — 3개월 유지 시 조정장 신호 확정.`});
     [..._partialAnalyzed].reverse().slice(0,4).forEach(a=>{
       const dd=a.drawdown?` | 최대하락: ${a.drawdown.toFixed(1)}%`:'';
-      const lag=a.mToBear?`확정→조정: ${a.mToBear}개월`:'(조정 미확인)';
+      const lag=a.mToBear!==null?`확정→조정: ${a.mToBear}개월`:'(조정 미확인)';
       entries.push({c:'ls',t:a.confirmDate,m:`🔵 [2종역전] 해소확정 | 역전: ${a.invStart} | 정상화: ${a.deInvStart} | ${lag}${dd}`});
     });
   }
