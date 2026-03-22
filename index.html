@@ -64,24 +64,9 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
 #dash{display:none;padding:22px 28px;max-width:1800px;margin:0 auto}
 
 /* ── 배너 ── */
-.banner{padding:18px 22px 18px 26px;border:1px solid;border-radius:var(--r);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:12px;position:relative;overflow:hidden}
-.banner::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:var(--r) 0 0 var(--r)}
-.banner.safe{border-color:rgba(63,185,80,.2);background:linear-gradient(135deg,rgba(63,185,80,.05) 0%,var(--bg1) 60%)}
-.banner.safe::before{background:var(--green)}
-.banner.warn{border-color:rgba(210,153,34,.25);background:linear-gradient(135deg,rgba(210,153,34,.06) 0%,var(--bg1) 60%)}
-.banner.warn::before{background:var(--yellow)}
-.banner.danger{border-color:rgba(248,81,73,.25);background:linear-gradient(135deg,rgba(248,81,73,.07) 0%,var(--bg1) 60%);animation:pulse-bd 2s infinite}
-.banner.danger::before{background:var(--red)}
 @keyframes pulse-bd{0%,100%{box-shadow:0 0 0 rgba(248,81,73,0)}50%{box-shadow:0 0 24px rgba(248,81,73,.18)}}
 .bl{display:flex;align-items:center;gap:16px}
-.sdot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
-.sdot.green{background:var(--green);box-shadow:0 0 10px rgba(63,185,80,.6)}
-.sdot.yellow{background:var(--yellow);box-shadow:0 0 10px rgba(210,153,34,.6);animation:blink 1.5s infinite}
-.sdot.red{background:var(--red);box-shadow:0 0 10px rgba(248,81,73,.6);animation:blink 1s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.bstatus{font-size:15px;font-weight:700}
-.bdesc{font-size:13px;color:var(--t2);margin-top:4px;line-height:1.6}
-.btime{font-size:11px;color:var(--t3);white-space:nowrap}
 
 /* ── 현재 위치 카드 ── */
 #phase-card{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:24px;background:var(--bg1);border:1px solid var(--bd);border-radius:var(--r);padding:18px 24px;margin-bottom:12px;box-shadow:var(--sh)}
@@ -369,20 +354,6 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
       </div>
     </div>
 
-    <div class="banner safe" id="banner" style="flex-wrap:wrap">
-      <div class="bl"><div class="sdot green" id="bdot"></div>
-        <div><div class="bstatus" id="bstatus">—</div><div class="bdesc" id="bdesc">—</div></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:16px">
-        <div id="live-return" style="display:none;font-size:13px;font-weight:bold"></div>
-        <div class="btime" id="btime">—</div>
-      </div>
-      <!-- 2종 역전 서브 행 -->
-      <div id="pb-row" style="display:none;width:100%;border-top:1px solid rgba(88,166,255,.2);padding-top:8px;margin-top:6px;font-size:12px;justify-content:space-between;align-items:center">
-        <span style="color:#58a6ff">🔵 <span id="pb-text">—</span></span>
-        <span id="pb-time" style="color:var(--t2);font-size:11px">—</span>
-      </div>
-    </div>
 
     <!-- 현재 위치 요약 카드 -->
     <div id="phase-card">
@@ -417,6 +388,11 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
       <div style="grid-column:1/-1;padding-top:8px;border-top:1px solid var(--bd)">
         <div id="pc-plain" style="font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:5px">—</div>
         <div id="pc-action" style="font-size:12px;color:var(--t1);font-weight:600;line-height:1.6"></div>
+        <div id="live-return" style="display:none;font-size:12px;font-weight:bold;margin-top:6px"></div>
+        <div id="pb-row" style="display:none;margin-top:6px;font-size:12px;padding-top:6px;border-top:1px solid rgba(88,166,255,.15);justify-content:space-between;align-items:center">
+          <span style="color:#58a6ff">🔵 <span id="pb-text">—</span></span>
+          <span id="pb-time" style="color:var(--t2);font-size:11px">—</span>
+        </div>
       </div>
     </div>
 
@@ -989,7 +965,6 @@ function render(data){
   invalidateCtxIndex(); // 데이터 갱신 시 툴팁 인덱스 재구축 예약
   const latest=_daily[_daily.length-1];
   updateCards(latest,_analyzed,_fedfunds);
-  updateBanner(phase,deInvStart,invStart,_analyzed,negRun,posRun);
   updatePhaseCard(phase,invStart,deInvStart,_analyzed,negRun);
   // 최근 SPX 월봉 종가 표시
   if(cache?.sp?.length){const lastSp=monthlyClose(cache.sp);const ls=lastSp[lastSp.length-1];if(ls){const el=document.getElementById('pc-spx');if(el)el.textContent=Math.round(ls.value).toLocaleString()+` (${ls.date.slice(0,7)})`;}}
@@ -1007,26 +982,6 @@ function render(data){
   document.getElementById('content').style.display='block';
 }
 
-function updateBanner(phase,deInvStart,invStart,analyzed,negRun,posRun){
-  const banner=document.getElementById('banner'),dot=document.getElementById('bdot');
-  const valid=analyzed.filter(a=>a.mToBear!==null);
-  const avg=valid.length?Math.round(valid.reduce((s,a)=>s+a.mToBear,0)/valid.length):null;
-  const last=analyzed.length?analyzed[analyzed.length-1]:null;
-  const recentConfirm=last&&(new Date()-new Date(last.confirmDate))<18*30*86400000;
-  if(phase==='inv_building'){banner.className='banner safe';dot.className='sdot green';document.getElementById('bstatus').textContent=`🟡 역전 예비 — 동시 역전 ${negRun||'?'}개월째`;document.getElementById('bdesc').textContent=`${invStart||'?'} 시작. 3개월 연속 유지 시 유효 역전 확정.`;document.getElementById('btime').textContent=`역전 시작: ${invStart||'—'}`;}
-  else if(phase==='inv_active'){banner.className='banner warn';dot.className='sdot yellow';document.getElementById('bstatus').textContent='🟡 역전 관찰중 — 아직 하락장 신호 아님';document.getElementById('bdesc').textContent='금리 역전이 확인됐습니다. 역전이 풀리고 2개월 유지될 때 비로소 신호가 발령됩니다. 지금은 신호 전 단계입니다.';document.getElementById('btime').textContent=`역전 시작: ${invStart||'—'}`;}
-  else if(phase==='deinv_building'||phase==='deinv_reinv'){
-    const curMon=new Date().toISOString().slice(0,7);
-    // 마지막 월이 현재 진행중인 월이면 미확정 → 확정 카운트에서 제외
-    const confirmed=deInvStart&&deInvStart.slice(0,7)<curMon?(posRun||1):Math.max(0,(posRun||1)-1);
-    banner.className='banner warn';dot.className='sdot yellow';
-    document.getElementById('bstatus').textContent=`🟡 경고 — 해소 ${confirmed}개월 확인 · 당월 미확정`;
-    document.getElementById('bdesc').textContent=`${deInvStart||'?'} 정상화 시작. s2·s3 양수 유지 확인 필요 — 2개월 연속 유지 시 신호 확정. 역사적 평균 ${avg||'?'}개월 뒤 SPX -20%.`;
-    document.getElementById('btime').textContent='⚡ 월말 종가 확정 대기';
-  }
-  else if(recentConfirm){const elapsed=Math.round((new Date()-new Date(last.confirmDate))/1000/60/60/24/30.4);banner.className='banner danger';dot.className='sdot red';document.getElementById('bstatus').textContent='🔴 위험 — 하락장 감별 완료: 주의 단계';document.getElementById('bdesc').textContent=`${last.confirmDate} 신호 확정. 현재 ${elapsed}개월 경과. 역사적 평균 ${avg||'?'}개월 뒤 SPX -20%.`;document.getElementById('btime').textContent=`확정일: ${last.confirmDate}`;}
-  else{banner.className='banner safe';dot.className='sdot green';document.getElementById('bstatus').textContent='🟢 정상 — 역전 없음';document.getElementById('bdesc').textContent='세 금리차 모두 양수. 정상 상태 유지 중.';document.getElementById('btime').textContent='—';}
-}
 
 function updatePhaseCard(phase,invStart,deInvStart,analyzed,negRun){
   const elMon=d=>d?Math.round((new Date()-new Date(d))/1000/60/60/24/30.4):null;
