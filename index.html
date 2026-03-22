@@ -1117,8 +1117,8 @@ function updatePhaseCard(phase,invStart,deInvStart,analyzed,negRun){
     idle:'모든 금리차가 정상입니다. 역전 신호 없음.',
     inv_building:`단기 금리가 장기보다 높아지는 중. 3개월 연속 유지 시 역전 확정 (현재 ${negRun||'?'}개월째).`,
     inv_active:'금리 역전 확인됨. 역전 해소 후 2개월 유지 시 하락장 신호 발령 — 아직 신호 전.',
-    deinv_building:'역전 해소 진행 중. s2·s3 양수 상태가 2개월 연속 유지되면 하락장 신호 확정.',
-    deinv_reinv:'해소 중 재역전 발생. 재차 양전환 후 2개월 유지 시 신호 확정.',
+    deinv_building:'해소 신호 감지 중 — 이달 월봉 종가가 음수로 돌아서면 카운트 초기화. 양수 유지 시에만 신호로 이어집니다.',
+    deinv_reinv:'해소 중 재역전 감지 — 월봉 종가 기준으로 재차 양전환이 확인돼야 카운트가 재개됩니다.',
     signal_active:'하락장 신호 확정. 역사적으로 이후 수개월 내 S&P500 -20% 이상 하락 구간 발생.'
   };
   set('pc-plain',plainMap[phase]||'');
@@ -1127,8 +1127,8 @@ function updatePhaseCard(phase,invStart,deInvStart,analyzed,negRun){
     idle:'→ 지금은 관망하세요. 별도 행동 필요 없습니다.',
     inv_building:'→ 매달 말 스프레드 수치를 확인하세요. 아직 포지션 변경 불필요.',
     inv_active:'→ 지금 당장 행동하기보다 상황을 주시하세요. 해소 시작 시 경고구간으로 전환됩니다.',
-    deinv_building:'→ 보유 자산의 리스크를 점검하기 시작하세요. 신호 확정 시 방어적 포지션을 고려하세요.',
-    deinv_reinv:'→ 재역전 중입니다. 불확실 구간이므로 큰 움직임보다 관망이 유리합니다.',
+    deinv_building:'→ 아직 확정된 것은 없습니다. 이달 월봉 종가 결과를 지켜보세요. 음수 전환 시 카운트 리셋, 신호 없음.',
+    deinv_reinv:'→ 재역전으로 카운트가 초기화됐습니다. 월봉 종가 기준 재확인 전까지 관망하세요.',
     signal_active:'→ 신호가 확정됐습니다. 포트폴리오 점검 및 방어적 자산 비중 확대를 고려하세요.'
   };
   const acEl=document.getElementById('pc-action');
