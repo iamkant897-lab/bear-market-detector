@@ -191,9 +191,6 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
 .intro-body{padding:0 20px 18px;font-size:13px;color:var(--t2);line-height:1.8;display:none;border-top:1px solid rgba(88,166,255,.1)}
 .intro-body.open{display:block}
 .intro-body b{color:var(--t1)}
-.intro-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
-.intro-card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r-sm);padding:12px 14px;font-size:12px;line-height:1.7}
-.intro-card-title{color:var(--blue);font-weight:600;margin-bottom:5px;font-size:13px}
 
 /* ── FAQ 패널 ── */
 .faq-item{padding:13px 0;border-bottom:1px solid rgba(45,55,72,.6)}
@@ -213,7 +210,6 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
 @media(max-width:1100px){
   .stats-row,.stats-row2{grid-template-columns:repeat(3,1fr)}
   .bgrid{grid-template-columns:1fr}
-  .intro-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:768px){
   #dash{padding:12px 12px}
@@ -320,47 +316,26 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
         <span class="intro-arr" style="color:var(--blue)">▼</span>
       </button>
       <div class="intro-body">
-        <b>무엇을 보여주나요?</b> 미국 국채 금리차(스프레드) 역전 현상을 추적해 <b>경기침체·조정장 신호</b>가 발생했는지 판단합니다.
-        금리차가 역전되고 다시 정상화될 때 역사적으로 S&P 500이 크게 하락하는 패턴을 분석합니다.
-        <div style="margin-top:8px;padding:7px 12px;background:rgba(210,153,34,0.08);border-left:2px solid var(--yellow);color:var(--t2)">
-          ⚠ <b style="color:var(--yellow)">판단 기준: 월봉 종가 전용</b> — 역전·해소·신호 확정 여부는 오직 <b>월봉(월말) 종가</b>만으로 판단합니다.
-          일봉·주봉은 단기 노이즈가 포함되어 있어 판단 기준에서 제외합니다.
-          일봉·주봉 기준으로 역전이 발생하거나 해소되더라도 <b>월봉 종가 기준으로 조건이 충족되지 않으면 신호로 인정하지 않습니다.</b>
+        <div style="color:var(--blue);font-size:11px;letter-spacing:1px;font-weight:600;margin-bottom:4px">◈ 사용 가이드</div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="this.nextElementSibling.classList.toggle('open')">📊 3종 역전 — 침체 신호 <span style="color:var(--t3)">▼</span></div>
+          <div class="faq-a">s1(10Y-2Y) · s2(2Y-3M) · s3(10Y-3M) <b style="color:var(--t1)">세 금리차가 모두 음수</b>로 3개월 이상 유지 후, s2·s3가 양전환 2개월 이상 유지 시 신호 확정. 역사적으로 확정 후 평균 수개월 내 S&P 500 <b style="color:var(--t1)">-20% 이상</b> 하락.</div>
         </div>
-
-        <div class="intro-grid">
-          <div class="intro-card">
-            <div class="intro-card-title">📊 3종 역전 — 침체 신호</div>
-            s1(10Y-2Y) · s2(2Y-3M) · s3(10Y-3M) <b>세 금리차가 모두 음수</b>로 3개월 이상 유지 후,
-            s2·s3가 양전환 2개월 이상 유지 시 신호 확정.
-            역사적으로 확정 후 평균 수개월 내 S&P 500 <b>-20% 이상</b> 하락.
-          </div>
-          <div class="intro-card">
-            <div class="intro-card-title">🔵 2종 역전 — 조정 신호</div>
-            s2(2Y-3M) · s3(10Y-3M) <b>두 금리차가 음수</b>로 3개월 이상 유지 후 s3 양전환 3개월 이상 유지 시 확정.
-            s1(10Y-2Y)은 <b>미참여</b> — 침체보다 약한 조정장 수준.
-            S&P 500 <b>-15%</b> 기준으로 조정 여부 판단.
-          </div>
-          <div class="intro-card">
-            <div class="intro-card-title">🕯 왜 일봉·주봉은 무시하나요?</div>
-            모든 역전·해소 판단은 <b>월봉(월말 종가)</b> 기준입니다.<br>
-            일봉·주봉은 일시적 변동(노이즈)이 많아 <b>오신호</b>가 자주 발생합니다.<br>
-            "일봉/주봉은 이미 역전됐는데 왜 신호가 없지?"<br>
-            → 월봉 종가 기준 조건을 아직 충족하지 않은 것입니다.
-          </div>
-          <div class="intro-card">
-            <div class="intro-card-title">🏦 데이터 출처: 연준(FRED)</div>
-            금리 데이터는 <b>시장 호가(US10Y 등)가 아닌</b> 노이즈를 줄이기 위해 연방준비제도(Fed)가 직접 산출·발표하는 공식 수치를 사용합니다.<br>
-            <b>DGS10</b> (10년물) · <b>DGS2</b> (2년물) · <b>DGS3MO</b> (3개월물)<br>
-            TradingView·Bloomberg 등의 US10Y와 소수점 단위 차이가 날 수 있습니다.
-          </div>
-          <div class="intro-card">
-            <div class="intro-card-title">📈 수익률 테이블 읽는 법</div>
-            <b>3M/6M/12M/24M</b>: 신호 확정 후 S&P 500 수익률<br>
-            <b>고점→저점</b>: 신호 전 36개월 고점 대비 최대 낙폭<br>
-            <b>임계도달</b>: 신호 후 -15%/-20% 도달까지 걸린 개월 수<br>
-            추적중(최근 30개월)은 성공률 계산에서 제외
-          </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="this.nextElementSibling.classList.toggle('open')">🔵 2종 역전 — 조정 신호 <span style="color:var(--t3)">▼</span></div>
+          <div class="faq-a">s2(2Y-3M) · s3(10Y-3M) <b style="color:var(--t1)">두 금리차가 음수</b>로 3개월 이상 유지 후 s3 양전환 3개월 이상 유지 시 확정. s1(10Y-2Y)은 <b style="color:var(--t1)">미참여</b> — 침체보다 약한 조정장 수준. S&P 500 <b style="color:var(--t1)">-15%</b> 기준으로 조정 여부 판단.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="this.nextElementSibling.classList.toggle('open')">🕯 왜 일봉·주봉은 무시하나요? <span style="color:var(--t3)">▼</span></div>
+          <div class="faq-a">모든 역전·해소 판단은 <b style="color:var(--t1)">월봉(월말 종가)</b> 기준입니다. 일봉·주봉은 일시적 변동(노이즈)이 많아 오신호가 자주 발생합니다. "일봉/주봉은 이미 역전됐는데 왜 신호가 없지?" → 월봉 종가 기준 조건을 아직 충족하지 않은 것입니다.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="this.nextElementSibling.classList.toggle('open')">🏦 데이터 출처: 연준(FRED) <span style="color:var(--t3)">▼</span></div>
+          <div class="faq-a">금리 데이터는 시장 호가(US10Y 등)가 아닌 연방준비제도(Fed)가 직접 산출·발표하는 공식 수치를 사용합니다. <b style="color:var(--t1)">DGS10</b> (10년물) · <b style="color:var(--t1)">DGS2</b> (2년물) · <b style="color:var(--t1)">DGS3MO</b> (3개월물). TradingView·Bloomberg 등과 소수점 단위 차이가 날 수 있습니다.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="this.nextElementSibling.classList.toggle('open')">📈 수익률 테이블 읽는 법 <span style="color:var(--t3)">▼</span></div>
+          <div class="faq-a"><b style="color:var(--t1)">3M/6M/12M/24M</b>: 신호 확정 후 S&P 500 수익률<br><b style="color:var(--t1)">고점→저점</b>: 신호 전 36개월 고점 대비 최대 낙폭<br><b style="color:var(--t1)">임계도달</b>: 신호 후 -15%/-20% 도달까지 걸린 개월 수. 추적중(최근 30개월)은 성공률 계산에서 제외.</div>
         </div>
 
         <!-- Q&A 섹션 -->
