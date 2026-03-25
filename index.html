@@ -641,15 +641,17 @@ async function fredFetch(url){
   }catch(_){}
   // 프록시 순차 시도
   const fredProxies=[
-    'https://corsproxy.io/?'+encodeURIComponent(url),
-    'https://api.allorigins.win/raw?url='+encodeURIComponent(url),
-    'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(url),
-    'https://thingproxy.freeboard.io/fetch/'+encodeURIComponent(url),
+    ['https://corsproxy.io/?'+encodeURIComponent(url),{}],
+    ['https://api.allorigins.win/raw?url='+encodeURIComponent(url),{}],
+    ['https://corsproxy.org/?'+encodeURIComponent(url),{}],
+    ['https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(url),{}],
+    ['https://cors.sh/'+url,{'x-cors-api-key':'temp_demo'}],
+    ['https://thingproxy.freeboard.io/fetch/'+encodeURIComponent(url),{}],
   ];
-  for(const p of fredProxies){
+  for(const [p,h] of fredProxies){
     try{
-      const r=await fetch(p,{signal:AbortSignal.timeout(12000)});
-      if(r.ok){const j=await r.json();if(j)return j;}
+      const r=await fetch(p,{signal:AbortSignal.timeout(15000),headers:h});
+      if(r.ok){const j=await r.json();if(j?.observations||j?.error)return j;}
     }catch(_){}
   }
   throw new Error('FRED 연결 실패 (직접·프록시 모두 차단됨)');
