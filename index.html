@@ -616,6 +616,8 @@ async function fetchSPX(){
   const proxies=[
     'https://corsproxy.io/?'+encodeURIComponent(yhUrl),
     'https://api.allorigins.win/raw?url='+encodeURIComponent(yhUrl),
+    'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(yhUrl),
+    'https://thingproxy.freeboard.io/fetch/'+encodeURIComponent(yhUrl),
   ];
   for(const url of proxies){
     try{
@@ -637,16 +639,19 @@ async function fredFetch(url){
     const j=await r.json().catch(()=>null);
     if(j)return j; // FRED 에러 응답 (400 등) 그대로 반환
   }catch(_){}
-  // 2) corsproxy.io
-  try{
-    const r=await fetch('https://corsproxy.io/?'+encodeURIComponent(url),{signal:AbortSignal.timeout(12000)});
-    if(r.ok)return await r.json();
-  }catch(_){}
-  // 3) allorigins.win
-  try{
-    const r=await fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(url),{signal:AbortSignal.timeout(12000)});
-    if(r.ok)return await r.json();
-  }catch(_){}
+  // 프록시 순차 시도
+  const fredProxies=[
+    'https://corsproxy.io/?'+encodeURIComponent(url),
+    'https://api.allorigins.win/raw?url='+encodeURIComponent(url),
+    'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(url),
+    'https://thingproxy.freeboard.io/fetch/'+encodeURIComponent(url),
+  ];
+  for(const p of fredProxies){
+    try{
+      const r=await fetch(p,{signal:AbortSignal.timeout(12000)});
+      if(r.ok){const j=await r.json();if(j)return j;}
+    }catch(_){}
+  }
   throw new Error('FRED 연결 실패 (직접·프록시 모두 차단됨)');
 }
 async function fred(id,start='1985-01-01'){
