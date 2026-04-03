@@ -1029,7 +1029,10 @@ function updatePhaseCard(phase,invStart,deInvStart,analyzed,negRun){
   const el=document.getElementById('pc-phase');if(el)el.style.color=color;
   // 진행 단계 표시 바
   const stepMap={idle:0,inv_building:1,inv_active:1,deinv_building:2,deinv_reinv:2,signal_active:3};
-  const activeStep=stepMap[phase]??0;
+  const _smCurYM=new Date().toISOString().slice(0,7);
+  const _smCfYM=last?.confirmDate?.slice(0,7);
+  const _smFc=!_smCfYM||_smCfYM<_smCurYM;
+  const activeStep=phase==='signal_active'&&!_smFc?2:(stepMap[phase]??0);
   const stepColors=['pp-active-green','pp-active-green','pp-active-yellow','pp-active-red'];
   [0,1,2,3].forEach(i=>{
     const s=document.getElementById('pp-'+i);
