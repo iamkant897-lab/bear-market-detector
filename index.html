@@ -1803,10 +1803,13 @@ function renderLog(phase,deInvStart,analyzed){
   else if(phase==='deinv_building'||phase==='deinv_reinv')entries.push({c:'lw',t:now,m:`⚠ 경고: 동시 해소 감지. 시작: ${deInvStart}. 역사적 평균 ${avg||'?'}개월 뒤 SPX -20%.`});
   else if(recentConfirm){const e=Math.round((new Date()-new Date(last.confirmDate))/1000/60/60/24/30.4);const curYM=new Date().toISOString().slice(0,7);const cfYM=last.confirmDate?.slice(0,7);const fullyConf=!cfYM||cfYM<curYM;entries.push({c:'ld',t:now,m:fullyConf?`🔴 하락장 감별 완료. 확정: ${last.confirmDate}. ${e}개월 경과.`:`🟡 신호 진입 (당월 미확정). 현재값 기준: ${last.confirmDate}. 이달 월봉 종가 확정 후 최종 신호 여부 결정. 종가 음수 시 카운트 초기화.`});}
   else entries.push({c:'ls',t:now,m:'정상 상태. 유효 동시 역전 없음.'});
+  const _logCurYM=new Date().toISOString().slice(0,7);
   [...analyzed].reverse().slice(0,6).forEach(a=>{
     const dd=a.drawdown?` | 최대하락: ${a.drawdown.toFixed(1)}%`:'';
     const lag=a.mToBear!==null?`확정→하락장: ${a.mToBear}개월`:'(하락장 미확인)';
-    entries.push({c:'ld',t:a.confirmDate,m:`🔴 [3종역전] 해소확정 | 역전: ${a.invStart} | 정상화: ${a.deInvStart} | ${lag}${dd}`});
+    const isCurMon=a.confirmDate?.slice(0,7)>=_logCurYM;
+    const label=isCurMon?'🟡 [3종역전] 해소 진행중 (당월 종가 미확정)':'🔴 [3종역전] 해소확정';
+    entries.push({c:isCurMon?'lw':'ld',t:a.confirmDate,m:`${label} | 역전: ${a.invStart} | 정상화: ${a.deInvStart} | ${isCurMon?'종가 확정 후 신호 여부 결정':lag}${dd}`});
   });
   if(_partialAnalyzed&&_partialAnalyzed.length){
     // 비교적 역전 현황
