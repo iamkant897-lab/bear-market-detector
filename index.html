@@ -1049,6 +1049,15 @@ function updatePhaseCard(phase,invStart,deInvStart,analyzed,negRun){
     zoneEl.style.color=z.color;
     zoneEl.style.border=`1px solid ${z.color}44`;
   }
+  // D-Day 및 당월 종가 확정 여부
+  const now2=new Date();
+  const lastOfMonth=new Date(now2.getFullYear(),now2.getMonth()+1,0);
+  const ddays=Math.ceil((lastOfMonth-now2)/(1000*60*60*24));
+  set('pc-dday',ddays===0?'오늘 확정!':ddays+'일');
+  // confirmDate가 이번 달이면 당월 종가 미확정 → 신호는 현재값 기준
+  const currentYM=now2.toISOString().slice(0,7);
+  const confirmYM=last?.confirmDate?.slice(0,7);
+  const fullyConfirmed=!confirmYM||confirmYM<currentYM;
   // 한 줄 평문 요약
   const plainMap={
     idle:'모든 금리차가 정상입니다. 역전 신호 없음.',
@@ -1056,7 +1065,9 @@ function updatePhaseCard(phase,invStart,deInvStart,analyzed,negRun){
     inv_active:'금리 역전 확인됨. 역전 해소 후 2개월 유지 시 하락장 신호 발령 — 아직 신호 전.',
     deinv_building:'해소 신호 감지 중 — 이달 월봉 종가가 음수로 돌아서면 카운트 초기화. 양수 유지 시에만 신호로 이어집니다.',
     deinv_reinv:'해소 중 재역전 감지 — 월봉 종가 기준으로 재차 양전환이 확인돼야 카운트가 재개됩니다.',
-    signal_active:'하락장 신호 확정. 역사적으로 이후 수개월 내 S&P500 -20% 이상 하락 구간 발생.'
+    signal_active: fullyConfirmed
+      ? '하락장 신호 확정. 역사적으로 이후 수개월 내 S&P500 -20% 이상 하락 구간 발생.'
+      : '현재값 기준으로 신호권에 진입했습니다. 이달 월봉 종가가 확정돼야 최종 신호로 인정됩니다. 종가가 음수로 돌아서면 카운트 초기화.'
   };
   set('pc-plain',plainMap[phase]||'');
   // 초보자 행동 가이드
@@ -1066,15 +1077,12 @@ function updatePhaseCard(phase,invStart,deInvStart,analyzed,negRun){
     inv_active:'→ 지금 당장 행동하기보다 상황을 주시하세요. 해소 시작 시 경고구간으로 전환됩니다.',
     deinv_building:'→ 아직 확정된 것은 없습니다. 이달 월봉 종가 결과를 지켜보세요. 음수 전환 시 카운트 리셋, 신호 없음.',
     deinv_reinv:'→ 재역전으로 카운트가 초기화됐습니다. 월봉 종가 기준 재확인 전까지 관망하세요.',
-    signal_active:'→ 신호가 확정됐습니다. 포트폴리오 점검 및 방어적 자산 비중 확대를 고려하세요.'
+    signal_active: fullyConfirmed
+      ? '→ 신호가 확정됐습니다. 포트폴리오 점검 및 방어적 자산 비중 확대를 고려하세요.'
+      : '→ 이달 월봉 종가 미확정 상태입니다. 종가 확정 후 신호 여부를 최종 확인하세요. 음수 전환 시 신호 없음.'
   };
   const acEl=document.getElementById('pc-action');
   if(acEl)acEl.textContent=actionMap[phase]||'';
-  // D-Day: 이번 달 마지막 날까지 남은 일수
-  const now2=new Date();
-  const lastOfMonth=new Date(now2.getFullYear(),now2.getMonth()+1,0);
-  const ddays=Math.ceil((lastOfMonth-now2)/(1000*60*60*24));
-  set('pc-dday',ddays===0?'오늘 확정!':ddays+'일');
 }
 
 async function initVisitorCount(){
