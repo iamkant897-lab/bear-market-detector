@@ -720,8 +720,11 @@ async function loadData(forceRefresh=false){
   try{
     let d10,d2,d3m,sp,usrec,fedfunds;
     if(window._githubCache){
-      // GitHub Pages 캐시 파일 사용
-      ({d10,d2,d3m,sp,usrec,fedfunds}=window._githubCache);
+      // GitHub Pages 캐시 파일 사용 — {date,value숫자} 형식으로 정규화
+      const xf=arr=>(arr||[]).map(o=>({date:o.date,value:+o.value}));
+      d10=xf(window._githubCache.d10);d2=xf(window._githubCache.d2);
+      d3m=xf(window._githubCache.d3m);sp=xf(window._githubCache.sp);
+      usrec=xf(window._githubCache.usrec);fedfunds=xf(window._githubCache.fedfunds);
       const upd=window._githubCache.updated?new Date(window._githubCache.updated).toLocaleString('ko-KR'):'—';
       document.getElementById('last-upd').textContent=`FRED 캐시 ${upd}`;
     }else{

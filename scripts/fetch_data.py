@@ -13,8 +13,8 @@ def fetch(series_id, start='1985-01-01'):
     print(f"  Fetching {series_id}...")
     with urllib.request.urlopen(url, timeout=30) as r:
         obs = json.loads(r.read())['observations']
-    # "." 값(데이터 없음) 필터링
-    obs = [o for o in obs if o['value'] != '.']
+    # "." 값 필터링 + 프론트엔드가 기대하는 {date, value} 형식으로 변환
+    obs = [{'date': o['date'], 'value': float(o['value'])} for o in obs if o['value'] != '.']
     print(f"  {series_id}: {len(obs)} observations")
     return obs
 
