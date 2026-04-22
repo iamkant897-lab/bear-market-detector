@@ -585,7 +585,20 @@ let sortCol='confirmDate',sortDir=-1;
 const CACHE_KEY='bmCache_v6',CACHE_TTL=24*60*60*1000;
 const EVT_COLORS=['#58a6ff','#3fb950','#ffa657','#bc8cff','#f85149','#e6edf3','#d29922','#39d353'];
 
-(function(){
+(async function(){
+  // GitHub Pages: data/cache.json 먼저 시도 → 있으면 API 키 없이 바로 실행
+  try{
+    const r=await fetch('./data/cache.json',{cache:'no-cache'});
+    if(r.ok){
+      const j=await r.json();
+      if(j&&j.d10&&j.d10.length){
+        window._githubCache=j;
+        showDash(); // API 키 화면 건너뜀
+        return;
+      }
+    }
+  }catch(_){}
+  // 캐시 없으면 기존 방식(API 키 입력)
   if(apiKey)showDash();
   document.getElementById('kinp').addEventListener('keydown',e=>{if(e.key==='Enter')submitKey();});
 })();
@@ -705,18 +718,27 @@ async function loadData(forceRefresh=false){
   // 개별 fetch를 태그와 함께 실행해 어디서 실패했는지 파악
   const tag=(label,p)=>p.catch(e=>{throw new Error(`[${label}] ${e.message}`);});
   try{
-    const [d10,d2,d3m,sp,usrec,fedfunds]=await Promise.all([
-      tag('DGS10',fred('DGS10')),
-      tag('DGS2',fred('DGS2')),
-      tag('DGS3MO',fred('DGS3MO')),
-      tag('SPX',fetchSPX()),
-      tag('USREC',fred('USREC')),
-      tag('FEDFUNDS',fred('FEDFUNDS')),
-    ]);
+    let d10,d2,d3m,sp,usrec,fedfunds;
+    if(window._githubCache){
+      // GitHub Pages 캐시 파일 사용
+      ({d10,d2,d3m,sp,usrec,fedfunds}=window._githubCache);
+      const upd=window._githubCache.updated?new Date(window._githubCache.updated).toLocaleString('ko-KR'):'—';
+      document.getElementById('last-upd').textContent=`FRED 캐시 ${upd}`;
+    }else{
+      // 직접 FRED API 호출
+      [d10,d2,d3m,sp,usrec,fedfunds]=await Promise.all([
+        tag('DGS10',fred('DGS10')),
+        tag('DGS2',fred('DGS2')),
+        tag('DGS3MO',fred('DGS3MO')),
+        tag('SPX',fetchSPX()),
+        tag('USREC',fred('USREC')),
+        tag('FEDFUNDS',fred('FEDFUNDS')),
+      ]);
+      document.getElementById('last-upd').textContent=`갱신: ${new Date().toLocaleString('ko-KR')}`;
+    }
     cache={d10,d2,d3m,sp,usrec,fedfunds};
     try{localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),data:cache}));}catch(e){}
     render(cache);
-    document.getElementById('last-upd').textContent=`갱신: ${new Date().toLocaleString('ko-KR')}`;
     loadingEl.style.display='none';
     document.getElementById('content').style.display='block';
     if(!hasCached)initVisitorCount();
