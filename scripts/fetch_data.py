@@ -13,9 +13,24 @@ def fetch(series_id, start='1985-01-01'):
     print(f"  Fetching {series_id}...")
     with urllib.request.urlopen(url, timeout=30) as r:
         obs = json.loads(r.read())['observations']
-    # "." 값 필터링 + 프론트엔드가 기대하는 {date, value} 형식으로 변환
     obs = [{'date': o['date'], 'value': float(o['value'])} for o in obs if o['value'] != '.']
     print(f"  {series_id}: {len(obs)} observations")
+    return obs
+
+def fetch_spx():
+    """Yahoo Finance에서 S&P500 40년치 주간 데이터 수집 (CORS 없이 서버에서 직접 호출)"""
+    url = 'https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=1wk&range=40y&includePrePost=false'
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (compatible; GitHub-Actions)'})
+    print("  Fetching SPX from Yahoo Finance...")
+    with urllib.request.urlopen(req, timeout=30) as r:
+        j = json.loads(r.read())
+    res = j['chart']['result'][0]
+    obs = [
+        {'date': datetime.datetime.fromtimestamp(t, tz=datetime.timezone.utc).strftime('%Y-%m-%d'), 'value': v}
+        for t, v in zip(res['timestamp'], res['indicators']['quote'][0]['close'])
+        if v is not None
+    ]
+    print(f"  SPX: {len(obs)} observations")
     return obs
 
 print("FRED 데이터 수집 시작...")
@@ -24,7 +39,7 @@ data = {
     'd10':      fetch('DGS10'),
     'd2':       fetch('DGS2'),
     'd3m':      fetch('DGS3MO'),
-    'sp':       fetch('SP500', '1990-01-01'),
+    'sp':       fetch_spx(),
     'usrec':    fetch('USREC'),
     'fedfunds': fetch('FEDFUNDS'),
 }
