@@ -693,7 +693,7 @@ async function loadData(forceRefresh=false){
         hasCached=true;
         const age=Math.round((Date.now()-cached.ts)/60000);
         document.getElementById('last-upd').textContent=`캐시 (${age}분전)${Date.now()-cached.ts<CACHE_TTL?' ✓':' — 갱신중...'}`;
-        if(Date.now()-cached.ts<CACHE_TTL)return; // 신선하면 갱신 불필요
+        if(!window._githubCache&&Date.now()-cached.ts<CACHE_TTL)return; // 신선하면 갱신 불필요 (단, githubCache 있으면 항상 갱신)
       }
     }catch(e){}
   }
