@@ -120,6 +120,7 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
 .rb:hover{border-color:var(--t2);color:var(--t1)}.rb.on{border-color:var(--blue);color:var(--blue);background:rgba(88,166,255,.08)}
 .cw{position:relative}
 #spx-wrap{height:320px}#spread-wrap{height:300px}#dist-wrap{height:220px}
+#spx-wrap,#spread-wrap{touch-action:pan-y;}
 .bgrid{display:grid;grid-template-columns:1fr 1.6fr;gap:16px}
 
 /* ── 테이블 패널 ── */
@@ -226,7 +227,8 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
 @media(max-width:600px){
   /* phase card: 단순 1열 스택 */
   #phase-card{grid-template-columns:1fr;gap:12px}
-  #phase-card>:nth-child(2){grid-template-columns:repeat(3,1fr)}
+  #phase-card>:nth-child(2){grid-template-columns:repeat(2,1fr)}
+  .pc-lbl-next::after{content:'다음확인';display:block}.pc-lbl-next{font-size:0}
   #phase-progress{gap:3px;flex-wrap:wrap}
   .pp-arrow{padding:0 2px;font-size:9px}
   .sc-val{font-size:18px}
@@ -349,7 +351,7 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
           </div>
           <div class="faq-item" style="border-bottom:none">
             <div class="faq-q" onclick="this.nextElementSibling.classList.toggle('open')">Q. 이 데이터는 언제 업데이트되나요? <span style="color:var(--t3)">▼</span></div>
-            <div class="faq-a">FRED가 영업일 기준 매일 수치를 발표하며, 대시보드는 접속할 때마다 최신 데이터를 불러옵니다. 단, 역전/해소 판단은 <b style="color:var(--t1)">월말 종가 확정 후</b>에만 바뀝니다.</div>
+            <div class="faq-a">FRED 데이터는 <b style="color:var(--t1)">매일 오전 11시(한국시간)</b> GitHub Actions를 통해 자동 업데이트됩니다. 단, 역전/해소 판단은 <b style="color:var(--t1)">월말 종가 확정 후</b>에만 바뀝니다.</div>
           </div>
         </div>
       </div>
@@ -369,7 +371,7 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
         <div><div class="pc-lbl">진입일</div><div class="pc-val" id="pc-since">—</div></div>
         <div><div class="pc-lbl">경과</div><div class="pc-val" id="pc-elapsed">—</div></div>
-        <div><div class="pc-lbl">다음 관찰 포인트</div><div class="pc-val" id="pc-next">—</div></div>
+        <div><div class="pc-lbl pc-lbl-next">다음 관찰 포인트</div><div class="pc-val" id="pc-next">—</div></div>
       </div>
       <div style="text-align:right">
         <div class="pc-lbl">월봉 확정까지</div>
@@ -608,7 +610,7 @@ function showDash(){
   document.getElementById('api-wrap').style.display='none';
   document.getElementById('dash').style.display='block';
   document.getElementById('btn-ref').style.display='';
-  document.getElementById('btn-key').style.display='';
+  if(!window._githubCache)document.getElementById('btn-key').style.display='';
   loadData();
 }
 function submitKey(){const k=document.getElementById('kinp').value.trim();if(!k)return;apiKey=k;localStorage.setItem('fredApiKey',k);showDash();}
@@ -726,8 +728,12 @@ async function loadData(forceRefresh=false){
       d10=xf(window._githubCache.d10);d2=xf(window._githubCache.d2);
       d3m=xf(window._githubCache.d3m);sp=xf(window._githubCache.sp);
       usrec=xf(window._githubCache.usrec);fedfunds=xf(window._githubCache.fedfunds);
-      const upd=window._githubCache.updated?new Date(window._githubCache.updated).toLocaleString('ko-KR'):'—';
-      document.getElementById('last-upd').textContent=`갱신: ${upd}`;
+      const _ud=window._githubCache.updated?new Date(window._githubCache.updated):null;
+      const _now=new Date();
+      const _isToday=_ud&&_ud.toDateString()===_now.toDateString();
+      const _dateStr=_isToday?'오늘':(_ud.getMonth()+1)+'/'+_ud.getDate();
+      const _updStr=_ud?_dateStr+' '+_ud.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' 갱신':'—';
+      document.getElementById('last-upd').textContent=_updStr;
     }else{
       // 직접 FRED API 호출
       [d10,d2,d3m,sp,usrec,fedfunds]=await Promise.all([
@@ -1385,17 +1391,34 @@ function makeHoverPlugin(isSpx){
       args.changed=true;
     },
     afterDraw(chart){
-      const x=chart._hx;if(x==null)return;
+      const hx=chart._hx;if(hx==null)return;
       const ca=chart.chartArea,ctx=chart.ctx;
-      if(x<ca.left||x>ca.right)return;
-      const ts=chart.scales.x.getValueForPixel(x);
+      if(hx<ca.left||hx>ca.right)return;
+      const ts=chart.scales.x.getValueForPixel(hx);
       const snapArr=isSpx?monthlyClose(cache?.sp||[]):monthlyClose(_daily||[]);
       const snap=nearestByTs(snapArr,ts);
       ctx.save();
+      // 수직선
       ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
-      ctx.beginPath();ctx.moveTo(x,ca.top);ctx.lineTo(x,ca.bottom);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(hx,ca.top);ctx.lineTo(hx,ca.bottom);ctx.stroke();
+      // 각 데이터셋 월봉 종가 위치에 동그라미
+      ctx.setLineDash([]);
+      chart.data.datasets.forEach((ds,i)=>{
+        const meta=chart.getDatasetMeta(i);
+        if(meta.hidden||!meta.data?.length)return;
+        let best=null,bestDiff=Infinity;
+        meta.data.forEach(pt=>{const d=Math.abs(pt.x-hx);if(d<bestDiff){bestDiff=d;best=pt;}});
+        if(best&&best.y>=ca.top&&best.y<=ca.bottom){
+          const col=ds.borderColor||'#e6edf3';
+          ctx.beginPath();ctx.arc(best.x,best.y,5,0,Math.PI*2);
+          ctx.fillStyle=typeof col==='string'?col.replace(/[\d.]+\)$/,'0.18)'):'rgba(255,255,255,0.18)';
+          ctx.fill();
+          ctx.strokeStyle=col;ctx.lineWidth=2;ctx.stroke();
+        }
+      });
+      // 날짜 레이블
       ctx.font='11px Courier New';ctx.fillStyle='rgba(230,237,243,0.6)';ctx.textAlign='center';
-      const lx=Math.min(Math.max(x,ca.left+22),ca.right-22);
+      const lx=Math.min(Math.max(hx,ca.left+22),ca.right-22);
       ctx.fillText(snap?snap.date.slice(0,7):new Date(ts).toISOString().slice(0,7),lx,ca.bottom+12);
       ctx.restore();
       drawInfoBox(ctx,ca,ts,isSpx);
