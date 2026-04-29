@@ -810,6 +810,8 @@ function detectEvents(monthly){
       else{reInvRun=0;reInvStart=null;}
     }
   }
+  // idle이지만 역전 예비 중(1~2개월)이면 inv_building으로 반환
+  if(phase==='idle'&&negRun>0)phase='inv_building';
   return{events,phase,invStart,deInvStart,negRun,posRun,reInvRun};
 }
 
@@ -1014,7 +1016,7 @@ function render(data){
   renderReturnDist(_analyzed);
   syncChartAreas();
   renderTable(_analyzed);
-  renderLog(phase,deInvStart,_analyzed);
+  renderLog(phase,deInvStart,_analyzed,negRun);
   renderSimilarCase(phase,_analyzed,negRun,posRun,invStart);
   updateMonthlyPanel(phase,deInvStart,_analyzed,_partialAnalyzed,_daily);
   document.getElementById('loading').style.display='none';
@@ -1845,13 +1847,14 @@ function renderSimilarCase(phase,analyzed,negRun,posRun,invStart){
   </div>`;
 }
 
-function renderLog(phase,deInvStart,analyzed){
+function renderLog(phase,deInvStart,analyzed,negRun){
   const entries=[],now=new Date().toLocaleString('ko-KR');
   const valid=analyzed.filter(a=>a.mToBear!==null);
   const avg=valid.length?Math.round(valid.reduce((s,a)=>s+a.mToBear,0)/valid.length):null;
   const last=analyzed.length?analyzed[analyzed.length-1]:null;
   const recentConfirm=last&&(new Date()-new Date(last.confirmDate))<18*30*86400000;
-  if(phase==='inv_active'||phase==='inv_building')entries.push({c:'ls',t:now,m:`유효 역전(INVERSION) 진행 중. 해소 2개월 연속 유지 시 하락장 신호 발령.`});
+  if(phase==='inv_building')entries.push({c:'ls',t:now,m:`⚠ 역전 예비 중 — s1·s2·s3 동시 음수 ${negRun||'?'}개월째. 3개월 연속 시 유효 역전 확정. 아직 신호 아님.`});
+  else if(phase==='inv_active')entries.push({c:'ls',t:now,m:`유효 역전(INVERSION) 진행 중. 해소 2개월 연속 유지 시 하락장 신호 발령.`});
   else if(phase==='deinv_building'||phase==='deinv_reinv')entries.push({c:'lw',t:now,m:`⚠ 경고: 동시 해소 감지. 시작: ${deInvStart}. 역사적 평균 ${avg||'?'}개월 뒤 SPX -20%.`});
   else if(recentConfirm){const e=Math.round((new Date()-new Date(last.confirmDate))/1000/60/60/24/30.4);const curYM=new Date().toISOString().slice(0,7);const cfYM=last.confirmDate?.slice(0,7);const fullyConf=!cfYM||cfYM<curYM;entries.push({c:'ld',t:now,m:fullyConf?`🔴 하락장 감별 완료. 확정: ${last.confirmDate}. ${e}개월 경과.`:`🟡 신호 진입 (당월 미확정). 현재값 기준: ${last.confirmDate}. 이달 월봉 종가 확정 후 최종 신호 여부 결정. 종가 음수 시 카운트 초기화.`});}
   else entries.push({c:'ls',t:now,m:'정상 상태. 유효 동시 역전 없음.'});
