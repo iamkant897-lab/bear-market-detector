@@ -681,9 +681,9 @@ async function fred(id,start='1985-01-01'){
 }
 
 async function loadData(forceRefresh=false){
-  // 캐시 있으면 즉시 렌더 후 백그라운드 갱신
+  // _githubCache(GitHub Actions 자동 데이터)가 있으면 localStorage 완전 건너뜀
   let hasCached=false;
-  if(!forceRefresh){
+  if(!window._githubCache&&!forceRefresh){
     try{
       const cached=JSON.parse(localStorage.getItem(CACHE_KEY));
       if(cached&&cached.data){
@@ -693,7 +693,7 @@ async function loadData(forceRefresh=false){
         hasCached=true;
         const age=Math.round((Date.now()-cached.ts)/60000);
         document.getElementById('last-upd').textContent=`캐시 (${age}분전)${Date.now()-cached.ts<CACHE_TTL?' ✓':' — 갱신중...'}`;
-        if(!window._githubCache&&Date.now()-cached.ts<CACHE_TTL)return; // 신선하면 갱신 불필요 (단, githubCache 있으면 항상 갱신)
+        if(Date.now()-cached.ts<CACHE_TTL)return;
       }
     }catch(e){}
   }
@@ -726,7 +726,7 @@ async function loadData(forceRefresh=false){
       d3m=xf(window._githubCache.d3m);sp=xf(window._githubCache.sp);
       usrec=xf(window._githubCache.usrec);fedfunds=xf(window._githubCache.fedfunds);
       const upd=window._githubCache.updated?new Date(window._githubCache.updated).toLocaleString('ko-KR'):'—';
-      document.getElementById('last-upd').textContent=`FRED 캐시 ${upd}`;
+      document.getElementById('last-upd').textContent=`갱신: ${upd}`;
     }else{
       // 직접 FRED API 호출
       [d10,d2,d3m,sp,usrec,fedfunds]=await Promise.all([
