@@ -4,7 +4,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
 <meta name="googlebot" content="noindex, nofollow">
-<title>하락장 감별기 v3 | Bear Market Detector</title>
+<title>하락장 감별기 v4 | Bear Market Detector</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <meta name="theme-color" content="#0d1117">
@@ -120,7 +120,7 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
 .rb:hover{border-color:var(--t2);color:var(--t1)}.rb.on{border-color:var(--blue);color:var(--blue);background:rgba(88,166,255,.08)}
 .cw{position:relative}
 #spx-wrap{height:320px}#spread-wrap{height:300px}#dist-wrap{height:220px}
-#spx-wrap,#spread-wrap{touch-action:pan-y;}
+#spx-wrap,#spread-wrap,#dist-wrap{touch-action:pan-y;}
 .bgrid{display:grid;grid-template-columns:1fr 1.6fr;gap:16px}
 
 /* ── 테이블 패널 ── */
@@ -247,7 +247,7 @@ body{background:var(--bg0);color:var(--t1);font-family:var(--font);font-size:14p
 
 <header class="hdr">
   <div>
-    <div class="hdr-title">하락장 감별기 <small>BEAR MARKET DETECTOR v3.2</small></div>
+    <div class="hdr-title">하락장 감별기 <small>BEAR MARKET DETECTOR v4.0</small></div>
     <div class="hdr-sub">동시역전 감지 · 동시해소 타이밍 · SPX 하락까지 평균 시차 분석 · FRED API</div>
     <div class="hdr-sub" style="color:rgba(248,81,73,0.6);margin-top:1px">⚠ 본 대시보드는 교육·연구 목적으로 제공되며 투자 권유가 아닙니다. 모든 투자 결정의 책임은 본인에게 있습니다.</div>
   </div>
@@ -747,7 +747,7 @@ async function loadData(forceRefresh=false){
       document.getElementById('last-upd').textContent=`갱신: ${new Date().toLocaleString('ko-KR')}`;
     }
     cache={d10,d2,d3m,sp,usrec,fedfunds};
-    try{localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),data:cache}));}catch(e){}
+    if(!window._githubCache){try{localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),data:cache}));}catch(e){}}
     render(cache);
     loadingEl.style.display='none';
     document.getElementById('content').style.display='block';
@@ -1188,7 +1188,7 @@ function updateCards(latest,analyzed,fedfunds){
   });
   if(fedfunds&&fedfunds.length)document.getElementById('sv-ff').textContent=fedfunds[fedfunds.length-1].value.toFixed(2)+'%';
   // FRED 데이터 최신 날짜 표시
-  if(latest?.date){
+  if(latest?.date&&!window._githubCache){
     const el=document.getElementById('last-upd');
     const cur=el.textContent;
     if(!cur.includes('기준'))el.textContent=cur+` · FRED 기준 ${latest.date}`;
@@ -1271,6 +1271,7 @@ function updateDDay(){
   if(el&&days<=3)el.style.color='var(--yellow)';
 }
 updateDDay();
+setInterval(updateDDay,60000);
 
 // ── 메모 저장/로드 ────────────────────────────────────────────
 function saveMemo(v){localStorage.setItem('bm-memo-'+new Date().toISOString().slice(0,7),v);}
@@ -1650,8 +1651,10 @@ function renderReturnDist(analyzed){
       onClick:(e,els)=>{
         if(!els.length)return;
         const dsIdx=els[0].datasetIndex;
-        if(dsIdx<analyzed.length){const a=analyzed[dsIdx];zoomToEvent(a.invStart,a.confirmDate);}
-        else if(dsIdx<analyzed.length+_partialAnalyzed.length){const a=_partialAnalyzed[dsIdx-analyzed.length];zoomToEvent(a.invStart,a.confirmDate);}
+        let confirmDate=null;
+        if(dsIdx<analyzed.length){const a=analyzed[dsIdx];zoomToEvent(a.invStart,a.confirmDate);confirmDate=a.confirmDate;}
+        else if(dsIdx<analyzed.length+_partialAnalyzed.length){const a=_partialAnalyzed[dsIdx-analyzed.length];zoomToEvent(a.invStart,a.confirmDate);confirmDate=a.confirmDate;}
+        if(confirmDate){const row=document.getElementById('trow-'+confirmDate);if(row)row.scrollIntoView({behavior:'smooth',block:'center'});}
       },
       scales:{
         x:{type:'linear',min:0.5,max:4.5,grid:{color:'#21262d'},
@@ -1779,7 +1782,7 @@ function renderTable(analyzed){
       else badge+='<span class="badge badge-g">이상없음</span>';
       const isLatest=a.confirmDate===latestDate;
       const rowStyle=isPartial?'background:rgba(88,166,255,0.03)':'';
-      return`<tr class="clickable${isLatest?' row-latest':''}" style="${rowStyle}" onclick="zoomToEvent('${a.invStart}','${a.confirmDate}')">
+      return`<tr id="trow-${a.confirmDate}" class="clickable${isLatest?' row-latest':''}" style="${rowStyle}" onclick="zoomToEvent('${a.invStart}','${a.confirmDate}')">
         <td style="color:var(--t3)">${isLatest?'★':''} #${i+1}</td>
         <td style="color:var(--t2)">${a.invStart}</td>
         <td style="color:${isPartial?'#58a6ff':'var(--red)'};font-weight:bold">${a.confirmDate}</td>

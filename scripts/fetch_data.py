@@ -44,6 +44,13 @@ data = {
     'fedfunds': fetch('FEDFUNDS'),
 }
 
+# 최소 데이터 검증 — 취득 실패 시 빈 캐시 저장 방지
+MIN_COUNTS = {'d10': 200, 'd2': 200, 'd3m': 200, 'sp': 500}
+for key, minimum in MIN_COUNTS.items():
+    count = len(data.get(key, []))
+    if count < minimum:
+        raise ValueError(f"{key} 데이터 부족: {count}개 (최소 {minimum}개 필요) — 캐시 저장 중단")
+
 os.makedirs('data', exist_ok=True)
 with open('data/cache.json', 'w') as f:
     json.dump(data, f, separators=(',', ':'))
