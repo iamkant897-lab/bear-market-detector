@@ -781,11 +781,13 @@ function monthlyClose(arr){
 function detectEvents(monthly){
   const events=[];let phase='idle',invStart=null,deInvStart=null,negRun=0,posRun=0,reInvRun=0,reInvStart=null;
   for(const m of monthly){
-    // 3종 진입 조건: s1·s2·s3 모두 음수 (s1은 깊이 지표로 진입에만 포함)
+    // 3종 진입: s1·s2·s3 모두 음수 (3개월 연속 시 inv_active)
     const allNeg=m.s1<0&&m.s2<0&&m.s3<0;
-    // 해소 조건: s2(2Y-3M)·s3(10Y-3M) 양수 복귀 — s1(10Y-2Y)은 해소 판단 제외
+    // 3종 해소 시작: 진입과 동일하게 s1·s2·s3 모두 양수 복귀해야 deinv_building 진입
+    const allPos=m.s1>0&&m.s2>0&&m.s3>0;
+    // 2개월 카운트 유지: s2·s3 양수 (s1 소폭 재등락 허용)
     const priPos=m.s2>0&&m.s3>0;
-    // 재역전 감지도 동일한 주요 2종 기준
+    // 재역전: s2·s3 동시 음수
     const priNeg=m.s2<0&&m.s3<0;
 
     if(phase==='idle'){
@@ -793,7 +795,8 @@ function detectEvents(monthly){
       else{negRun=0;invStart=null;}
     }
     else if(phase==='inv_active'){
-      if(priPos){phase='deinv_building';posRun=1;deInvStart=m.date;}
+      // s1 포함 3종 모두 양수 복귀 시에만 해소 시작 — s2·s3만 양전환은 해소 아님
+      if(allPos){phase='deinv_building';posRun=1;deInvStart=m.date;}
     }
     else if(phase==='deinv_building'){
       if(priPos){posRun++;if(posRun>=2){events.push({invStart,deInvStart,confirmDate:m.date});phase='signal_active';posRun=0;reInvRun=0;reInvStart=null;}}
