@@ -909,7 +909,7 @@ function analyzeSpx(events,spArr,bearThresh=0.80){
     const spPeak=spSig?getPeak(ev.confirmDate,36):null;
     const peakV=spPeak?spPeak.value:spSig?.value;
     const spBear=spSig?getBear(ev.confirmDate,peakV,30):null;
-    const invDays=daysBetween(ev.invStart,ev.confirmDate);
+    const invDays=daysBetween(ev.invStart,ev.deInvStart||ev.confirmDate);// 순수 역전기간: invStart→deInvStart
     const mToBear=(spSig&&spBear)?monthsBetween(ev.confirmDate,spBear.date):null;
     const mToTrough=(spSig&&spTrough)?monthsBetween(ev.confirmDate,spTrough.date):null;
     // 하락률: 고점 → 24개월 내 최저점 (전통적 drawdown 정의)
@@ -1131,7 +1131,7 @@ function updatePhaseCard(phase,invStart,deInvStart,analyzed,negRun){
   const plainMap={
     idle:'모든 금리차가 정상입니다. 역전 신호 없음.',
     inv_building:`단기 금리가 장기보다 높아지는 중. 3개월 연속 유지 시 역전 확정 (현재 ${negRun||'?'}개월째).`,
-    inv_active:'금리 역전 확인됨. 역전 해소 후 2개월 유지 시 하락장 신호 발령 — 아직 신호 전.',
+    inv_active:'3종 금리 역전 확인됨. s1·s2·s3 모두 양전환 후 2개월 연속 유지 시 하락장 신호 발령 — 아직 신호 전.',
     deinv_building:'해소 신호 감지 중 — 이달 월봉 종가가 음수로 돌아서면 카운트 초기화. 양수 유지 시에만 신호로 이어집니다.',
     deinv_reinv:'해소 중 재역전 감지 — 월봉 종가 기준으로 재차 양전환이 확인돼야 카운트가 재개됩니다.',
     signal_active: fullyConfirmed
@@ -1321,7 +1321,7 @@ function updateMonthlyPanel(phase,deInvStart,analyzed,partialAnalyzed,daily){
     const isCur=last&&last.date.slice(0,7)===curMon;
     const lines=[];
     lines.push(isCur?`<span style="color:var(--yellow)">⚠ 당월 종가 미확정 — 현재값 기준</span>`:`<span style="color:var(--green)">✓ 전월 종가 확정: ${last?.date}</span>`);
-    const nextMap={idle:'s2·s3 동시 음전환 여부',inv_building:'s1·s2·s3 모두 음수 유지 여부',inv_active:'s1·s2·s3 모두 동시 양전환 여부 (하나라도 음수면 역전 유지)',deinv_building:'<span style="color:var(--yellow)">s2·s3 양수 유지 → 2개월 시 신호 확정</span>',deinv_reinv:'s2·s3 재차 양전환 여부',signal_active:'SPX 현재가 vs 신호일 비교'};
+    const nextMap={idle:'s1·s2·s3 동시 음전환 여부 (3개월 연속 시 역전 확정)',inv_building:'s1·s2·s3 모두 음수 유지 여부',inv_active:'s1·s2·s3 모두 동시 양전환 여부 (하나라도 음수면 역전 유지)',deinv_building:'<span style="color:var(--yellow)">s2·s3 양수 유지 → 2개월 시 신호 확정</span>',deinv_reinv:'s2·s3 재차 양전환 여부',signal_active:'SPX 현재가 vs 신호일 비교'};
     lines.push(`확인: ${nextMap[phase]||'—'}`);
     if(_partialResult?.phase==='inv_active')lines.push(`2종역전: <span style="color:#58a6ff">진행중</span>`);
     cl.innerHTML=lines.map(l=>`<div>${l}</div>`).join('');
