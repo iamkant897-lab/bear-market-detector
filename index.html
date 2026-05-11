@@ -1243,12 +1243,16 @@ function updatePartialBanner(){
   if(!pr||pr.phase==='idle'){pb.style.display='none';return;}
   pb.style.display='flex';
   if(pr.phase==='inv_active'){
-    document.getElementById('pb-text').textContent=`s2·s3 단독 역전 진행중 — 역전 시작: ${pr.invStart||'?'} · s3(10Y-3M) 양전환 대기`;
-    document.getElementById('pb-time').textContent='s1(10Y-2Y) 미참여 = 조정장 수준';
-  }else if(pr.phase==='deinv_tracking'){
     const run=pr.posRun||0;
-    document.getElementById('pb-text').textContent=`s2·s3 해소 진행중 — s3 연속 양수 ${run}개월 · 확정까지 ${Math.max(0,3-run)}개월 남음`;
-    document.getElementById('pb-time').textContent=`해소 시작: ${pr.deInvStart||'?'}`;
+    if(run>0){
+      // s2·s3 해소 카운트 진행 중 (posRun=1, 아직 미확정)
+      document.getElementById('pb-text').textContent=`s2·s3 해소 ${run}개월째 — 다음달도 유지 시 조정장 신호 확정`;
+      document.getElementById('pb-time').textContent=`해소 시작: ${pr.deInvStart||'?'}`;
+    }else{
+      // 역전 중, 해소 미시작
+      document.getElementById('pb-text').textContent=`s2·s3 단독 역전 진행중 — 역전 시작: ${pr.invStart||'?'} · s2·s3 동시 양전환 대기`;
+      document.getElementById('pb-time').textContent='s1(10Y-2Y) 미참여 = 조정장 수준';
+    }
   }
 }
 
@@ -1553,8 +1557,16 @@ function renderSpreadChart(daily,events,phase,invStart,deInvStart,recPeriods,fed
   const partialInvPeriods=(partialResult?.events||[]).map(e=>({s:e.invStart,e:e.deInvStart}));
   const partialDeInvPeriods=(partialResult?.events||[]).map(e=>({s:e.deInvStart,e:e.confirmDate}));
   const today2=new Date().toISOString().slice(0,10);
-  if(partialResult?.phase==='inv_active'&&partialResult.invStart)partialInvPeriods.push({s:partialResult.invStart,e:today2,ongoing:true});
-  if(partialResult?.phase==='deinv_building'&&partialResult.invStart&&partialResult.deInvStart){partialInvPeriods.push({s:partialResult.invStart,e:partialResult.deInvStart});partialDeInvPeriods.push({s:partialResult.deInvStart,e:today2,ongoing:true});}
+  if(partialResult?.phase==='inv_active'&&partialResult.invStart){
+    if(partialResult.deInvStart&&(partialResult.posRun||0)>0){
+      // 해소 카운트 중(posRun=1) — 역전 구간(빨간) + 해소 시작 구간(노란) 분리 표시
+      partialInvPeriods.push({s:partialResult.invStart,e:partialResult.deInvStart});
+      partialDeInvPeriods.push({s:partialResult.deInvStart,e:today2,ongoing:true});
+    }else{
+      // 순수 역전 중
+      partialInvPeriods.push({s:partialResult.invStart,e:today2,ongoing:true});
+    }
+  }
   const ctx=document.getElementById('spread-chart').getContext('2d');
   const today=new Date().toISOString().slice(0,10);
 
