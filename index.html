@@ -548,6 +548,7 @@ S&P 500이 고점 대비 -15% 이하로
             <thead><tr>
               <th>#</th>
               <th class="sortable" data-col="invStart" onclick="sortBy('invStart')">역전시작</th>
+              <th class="sortable col-ext" data-col="deInvStart" onclick="sortBy('deInvStart')">해소시작</th>
               <th class="sortable" data-col="confirmDate" onclick="sortBy('confirmDate')">해소확정</th>
               <th class="sortable" data-col="invDays" onclick="sortBy('invDays')">역전기간</th>
               <th class="col-ext">S&amp;P@신호</th>
@@ -1311,7 +1312,7 @@ function updateMonthlyPanel(phase,deInvStart,analyzed,partialAnalyzed,daily){
     const isCur=last&&last.date.slice(0,7)===curMon;
     const lines=[];
     lines.push(isCur?`<span style="color:var(--yellow)">⚠ 당월 종가 미확정 — 현재값 기준</span>`:`<span style="color:var(--green)">✓ 전월 종가 확정: ${last?.date}</span>`);
-    const nextMap={idle:'s2·s3 동시 음전환 여부',inv_building:'s1·s2·s3 모두 음수 유지 여부',inv_active:'s2 또는 s3 양전환 여부',deinv_building:'<span style="color:var(--yellow)">s2·s3 양수 유지 → 2개월 시 신호 확정</span>',deinv_reinv:'s2·s3 재차 양전환 여부',signal_active:'SPX 현재가 vs 신호일 비교'};
+    const nextMap={idle:'s2·s3 동시 음전환 여부',inv_building:'s1·s2·s3 모두 음수 유지 여부',inv_active:'s1·s2·s3 모두 동시 양전환 여부 (하나라도 음수면 역전 유지)',deinv_building:'<span style="color:var(--yellow)">s2·s3 양수 유지 → 2개월 시 신호 확정</span>',deinv_reinv:'s2·s3 재차 양전환 여부',signal_active:'SPX 현재가 vs 신호일 비교'};
     lines.push(`확인: ${nextMap[phase]||'—'}`);
     if(_partialResult?.phase==='inv_active')lines.push(`2종역전: <span style="color:#58a6ff">진행중</span>`);
     cl.innerHTML=lines.map(l=>`<div>${l}</div>`).join('');
@@ -1776,7 +1777,7 @@ function sortBy(col){
 
 function renderTable(analyzed){
   const tbody=document.getElementById('htbody');
-  if(!analyzed.length&&!_partialAnalyzed.length){tbody.innerHTML='<tr><td colspan="13" style="color:var(--t3);text-align:center;padding:24px">데이터 없음</td></tr>';return;}
+  if(!analyzed.length&&!_partialAnalyzed.length){tbody.innerHTML='<tr><td colspan="14" style="color:var(--t3);text-align:center;padding:24px">데이터 없음</td></tr>';return;}
   const now=new Date().toISOString().slice(0,10);
   const allDD=[...analyzed,..._partialAnalyzed].filter(a=>a.drawdown!==null).map(a=>a.drawdown);
   const maxDD=allDD.length?Math.min(...allDD):0;
@@ -1806,6 +1807,7 @@ function renderTable(analyzed){
       return`<tr id="trow-${a.confirmDate}" class="clickable${isLatest?' row-latest':''}" style="${rowStyle}" onclick="zoomToEvent('${a.invStart}','${a.confirmDate}')">
         <td style="color:var(--t3)">${isLatest?'★':''} #${i+1}</td>
         <td style="color:var(--t2)">${a.invStart}</td>
+        <td class="col-ext" style="color:var(--yellow)">${a.deInvStart||'—'}</td>
         <td style="color:${isPartial?'#58a6ff':'var(--red)'};font-weight:bold">${a.confirmDate}</td>
         <td style="color:var(--t2)">${invM}개월</td>
         <td class="col-ext" style="color:var(--t1)">${spSig}</td>
@@ -1814,7 +1816,7 @@ function renderTable(analyzed){
       </tr>`;
     }).join('');
   }
-  const secHdr=(label,color,sub)=>`<tr><td colspan="13" style="padding:8px 10px 4px;color:${color};font-size:9px;letter-spacing:1.5px;border-bottom:1px solid ${color}22;border-top:1px solid var(--bd)">${label} <span style="color:var(--t3);font-weight:normal">${sub}</span></td></tr>`;
+  const secHdr=(label,color,sub)=>`<tr><td colspan="14" style="padding:8px 10px 4px;color:${color};font-size:9px;letter-spacing:1.5px;border-bottom:1px solid ${color}22;border-top:1px solid var(--bd)">${label} <span style="color:var(--t3);font-weight:normal">${sub}</span></td></tr>`;
   let html='';
   if(analyzed.length)html+=secHdr('◈ 3종 역전 해소 — 침체 신호','var(--red)','— s1(10Y-2Y)+s2(2Y-3M)+s3(10Y-3M) 동시역전 해소 · -20% 추적')+makeRows(analyzed,false);
   if(_partialAnalyzed.length)html+=secHdr('◈ 2종 역전 해소 — 조정 신호','#58a6ff','— s2(2Y-3M)+s3(10Y-3M)만 역전 해소, s1 미합류 · -15% 추적')+makeRows(_partialAnalyzed,true);
