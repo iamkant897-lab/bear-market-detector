@@ -849,7 +849,7 @@ function detectPartialEvents(monthly){
         // 새 카운트 시작: posRun이 0이면 이 달이 해소 시작점
         if(posRun===0)deInvStart=m.date;
         posRun++;
-        if(posRun>=3){events.push({invStart,deInvStart,confirmDate:m.date,type:'partial'});phase='idle';negRun=0;posRun=0;invStart=null;deInvStart=null;}
+        if(posRun>=2){events.push({invStart,deInvStart,confirmDate:m.date,type:'partial'});phase='idle';negRun=0;posRun=0;invStart=null;deInvStart=null;}
       }else{
         // s2 또는 s3 음수 → 카운트·해소 시작점 리셋 (역전으로 간주)
         posRun=0;deInvStart=null;
