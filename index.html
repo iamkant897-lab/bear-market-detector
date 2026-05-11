@@ -830,30 +830,33 @@ function detectEvents(monthly){
   return{events,phase,invStart,deInvStart,negRun,posRun,reInvRun};
 }
 
-// 비교적 유효 역전: s2·s3 3개월 동시 음수 → deinv_tracking 진입
-// 재역전이 와도 invStart 유지 (에너지 축적으로 간주)
-// s3가 최종적으로 3개월 연속 양수 유지 시 확정
+// 비교적 유효 역전: s2·s3 3개월 동시 음수 → inv_active 진입
+// 해소: s2·s3 동시 양수 3개월 연속 유지 시 확정 (진입과 대칭)
+// s2 또는 s3 하나라도 음수면 카운트·deInvStart 리셋 (3종 로직과 동일)
 function detectPartialEvents(monthly){
-  const events=[];let phase='idle',invStart=null,deInvStart=null,negRun=0,s3Run=0;
+  const events=[];let phase='idle',invStart=null,deInvStart=null,negRun=0,posRun=0;
   for(const m of monthly){
     // 정의: s2(2Y-3M) AND s3(10Y-3M) 동시 음수 — s1 조건 없음
     // 완전역전(s1까지 음수)과 겹치는 건 render()의 후처리 필터에서 제거
     const bothInv=m.s2<0&&m.s3<0;
+    // 해소: 진입과 대칭 — s2·s3 동시 양수여야 카운트
+    const bothPos=m.s2>0&&m.s3>0;
     if(phase==='idle'){
       if(bothInv){if(!negRun)invStart=m.date;negRun++;if(negRun>=3)phase='inv_active';}
       else{negRun=0;invStart=null;}
     }else if(phase==='inv_active'){
-      if(m.s3>0){
-        if(!deInvStart)deInvStart=m.date;
-        s3Run++;
-        if(s3Run>=3){events.push({invStart,deInvStart,confirmDate:m.date,type:'partial'});phase='idle';negRun=0;s3Run=0;invStart=null;deInvStart=null;}
+      if(bothPos){
+        // 새 카운트 시작: posRun이 0이면 이 달이 해소 시작점
+        if(posRun===0)deInvStart=m.date;
+        posRun++;
+        if(posRun>=3){events.push({invStart,deInvStart,confirmDate:m.date,type:'partial'});phase='idle';negRun=0;posRun=0;invStart=null;deInvStart=null;}
       }else{
-        // 재역전(s1>=0 유지): 에너지 축적, invStart 유지
-        s3Run=0;deInvStart=null;
+        // s2 또는 s3 음수 → 카운트·해소 시작점 리셋 (역전으로 간주)
+        posRun=0;deInvStart=null;
       }
     }
   }
-  return{events,phase,invStart,deInvStart,negRun,posRun:s3Run};
+  return{events,phase,invStart,deInvStart,negRun,posRun};
 }
 
 function addMonths(ds,n){const d=new Date(ds);d.setMonth(d.getMonth()+n);return d.toISOString().slice(0,10);}
