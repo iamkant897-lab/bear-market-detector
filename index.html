@@ -799,13 +799,25 @@ function detectEvents(monthly){
       if(allPos){phase='deinv_building';posRun=1;deInvStart=m.date;}
     }
     else if(phase==='deinv_building'){
-      if(priPos){posRun++;if(posRun>=2){events.push({invStart,deInvStart,confirmDate:m.date});phase='signal_active';posRun=0;reInvRun=0;reInvStart=null;}}
-      else if(priNeg){phase='deinv_reinv';reInvStart=m.date;reInvRun=1;posRun=0;}
-      else{posRun=0;}
+      if(priPos){
+        // 새 카운트 시작: posRun이 0이면 이 달이 해소 시작점
+        if(posRun===0)deInvStart=m.date;
+        posRun++;
+        if(posRun>=2){events.push({invStart,deInvStart,confirmDate:m.date});phase='signal_active';posRun=0;reInvRun=0;reInvStart=null;}
+      }else if(priNeg){
+        // 재역전 → 해소 시작점도 리셋 (2개월 못 채우면 역전으로 간주)
+        phase='deinv_reinv';reInvStart=m.date;reInvRun=1;posRun=0;deInvStart=null;
+      }else{
+        // s2·s3 혼재 → 카운트·시작점 모두 리셋
+        posRun=0;deInvStart=null;
+      }
     }
     else if(phase==='deinv_reinv'){
       if(priNeg){reInvRun++;if(reInvRun>=3){phase='inv_active';invStart=reInvStart;deInvStart=null;reInvRun=0;reInvStart=null;posRun=0;}}
-      else{phase='deinv_building';posRun=priPos?1:0;reInvRun=0;reInvStart=null;}
+      else{
+        // 재역전 해소 → 이 달이 priPos면 새 해소 카운트 시작
+        phase='deinv_building';posRun=priPos?1:0;deInvStart=priPos?m.date:null;reInvRun=0;reInvStart=null;
+      }
     }
     else if(phase==='signal_active'){
       // 신호 후 새 3종 역전: s1 재합류 필요 (진입은 3종 기준 유지)
@@ -906,7 +918,10 @@ function buildPeriods(events,phase,invStart,deInvStart){
   const ip=[],dp=[],today=new Date().toISOString().slice(0,10);
   for(const ev of events){ip.push({s:ev.invStart,e:ev.deInvStart});dp.push({s:ev.deInvStart,e:ev.confirmDate});}
   if((phase==='inv_active'||phase==='inv_building')&&invStart)ip.push({s:invStart,e:today,ongoing:true});
-  if((phase==='deinv_building'||phase==='deinv_reinv')&&invStart&&deInvStart){ip.push({s:invStart,e:deInvStart});dp.push({s:deInvStart,e:today,ongoing:true});}
+  if((phase==='deinv_building'||phase==='deinv_reinv')&&invStart){
+    if(deInvStart){ip.push({s:invStart,e:deInvStart});dp.push({s:deInvStart,e:today,ongoing:true});}
+    else{ip.push({s:invStart,e:today,ongoing:true});}// deInvStart 미확립 = 아직 역전으로 표시
+  }
   return{invPeriods:ip,deInvPeriods:dp};
 }
 
